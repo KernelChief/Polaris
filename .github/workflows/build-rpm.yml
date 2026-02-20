@@ -39,7 +39,7 @@ jobs:
             rsync tar findutils
 
       - name: Checkout source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -49,10 +49,12 @@ jobs:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
           # 1) workflow_dispatch explicit input wins
           if [ -n "${INPUT_VERSION}" ]; then
-            VERSION="${INPUT_VERSION#v}"
+            VERSION="${INPUT_VERSION}"
+            VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~-]/./g')"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Resolved version from workflow input: ${VERSION}"
             exit 0
@@ -61,32 +63,32 @@ jobs:
           # 2) Tag pushes use tag name
           if [ "${GITHUB_REF#refs/tags/}" != "${GITHUB_REF}" ]; then
             VERSION="${GITHUB_REF#refs/tags/}"
-            VERSION="${VERSION#v}"
+            VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~-]/./g')"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Resolved version from tag: ${VERSION}"
             exit 0
           fi
 
-          # 3) PR builds create beta pre-release from latest stable tag
+          # 3) PR builds create a clean beta version.
+          # RPM Version cannot include '-', so we use dots for prerelease label.
           if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
-            git config --global --add safe.directory "$GITHUB_WORKSPACE"
             BASE_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
-            BASE_VERSION="${BASE_TAG#v}"
+            BASE_VERSION="${BASE_TAG}"
             if [ -z "${BASE_VERSION}" ]; then
-              BASE_VERSION="0.0.0"
+              BASE_VERSION="v0.0.0"
             fi
 
             SHORT_SHA="$(printf '%s' "$GITHUB_SHA" | cut -c1-8)"
-            VERSION="${BASE_VERSION}-beta.pr${{ github.event.pull_request.number }}.${SHORT_SHA}"
+            VERSION="${BASE_VERSION}.beta.pr${{ github.event.pull_request.number }}.${SHORT_SHA}"
+            VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~]/./g')"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Resolved version for PR beta build: ${VERSION}"
             exit 0
           fi
 
           # 4) Fallback for branch manual runs without input
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           VERSION="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
-          VERSION="${VERSION#v}"
+          VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~-]/./g')"
           if [ -z "${VERSION}" ]; then
             echo "Could not resolve a version (no tags found)."
             exit 1
@@ -111,23 +113,9 @@ jobs:
           echo "GITHUB_REF_TYPE=$GITHUB_REF_TYPE"
           echo "VERSION (env)=$VERSION"
 
-          # Needed in containerized GitHub Actions runs to allow git commands.
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-          # workflow_dispatch on branches may have empty VERSION.
-          # Fallback to latest v* tag so manual runs still work without input.
           if [ -z "$VERSION" ]; then
-            VERSION="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
-            VERSION="${VERSION#v}"
-            export VERSION
-            echo "VERSION (latest-tag fallback)=$VERSION"
-          fi
-
-          if [ -z "$VERSION" ] && [ "${GITHUB_REF#refs/tags/}" != "${GITHUB_REF}" ]; then
-            VERSION="${GITHUB_REF#refs/tags/}"
-            VERSION="${VERSION#v}"
-            export VERSION
-            echo "VERSION (fallback)=$VERSION"
+            echo "Resolved VERSION is empty; aborting."
+            exit 1
           fi
 
           chmod +x src/packaging/build-rpm.sh
@@ -137,7 +125,7 @@ jobs:
           find "$HOME/rpmbuild/RPMS" -type f -name "*.rpm" -exec cp -v {} "$DISTDIR/" \;
 
       - name: Upload RPM artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: rpm-f${{ matrix.fedora }}-kde-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
           path: dist/*.rpm
@@ -150,7 +138,7 @@ jobs:
 
     steps:
       - name: Checkout source (for tag fallback)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -176,7 +164,7 @@ jobs:
 
       - name: Download Fedora 43 KDE artifacts
         if: steps.resolve_tag.outputs.do_release == 'true'
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: rpm-f43-kde-release
           path: dist
