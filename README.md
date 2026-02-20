@@ -167,6 +167,7 @@ You can install only Flatpak rows; each prompts for user/system scope.
 
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Contributing](CONTRIBUTING.md)
+- Maintainer/developer workflow: see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 

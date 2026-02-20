@@ -21,6 +21,27 @@ ZOOM_URL = "https://zoom.us/client/latest/zoom_x86_64.rpm"
 CHROME_URL = "https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm"
 
 
+# -----------------------------------------------------------------------------
+# HOW TO ADD / EDIT APPS (quick maintainer guide)
+# -----------------------------------------------------------------------------
+# 1) Add a new item inside FEATURES (below) with a unique "id".
+# 2) Pick a "check" type so the UI knows if it is installed:
+#      rpm, rpm_all, flatpak, zram, repo_and_pkg, tailscale,
+#      pkg_and_service, appimage_glob, appimage_glob_any
+# 3) Add helper action steps in "install" and optional "remove".
+#    Each step is a list, for example:
+#      ["install_pkg", "vlc"]
+#      ["install_url_rpm", "https://..."]
+#      ["install_flatpak_app", "com.example.App", "system"]
+# 4) Ensure each action exists in src/workstation-starter-kit-helper.
+#
+# Optional keys:
+# - "contains": shown by the Details popup (great for bundle clarity)
+# - omit "remove" if you want install-only behavior
+#
+# NOTE: Keep changes data-driven in FEATURES first; avoid hardcoding logic
+# unless adding a truly new check/action model.
+# -----------------------------------------------------------------------------
 FEATURES = [
     {
         "id": "essential",
