@@ -1,4 +1,5 @@
 # 🛠️ Workstation Starter Kit
+## By friends, for friends—now for everyone.
 
 [![Last Commit](https://img.shields.io/github/last-commit/KernelChief/Workstation-Starter-Kit)](https://github.com/KernelChief/Workstation-Starter-Kit/commits)
 [![Repo Size](https://img.shields.io/github/repo-size/KernelChief/Workstation-Starter-Kit)](https://github.com/KernelChief/Workstation-Starter-Kit)
@@ -9,9 +10,15 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-orange?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/ttheroux)
 [![Stars](https://img.shields.io/github/stars/KernelChief/alma-driver-manager?style=social)](https://github.com/KernelChief/alma-driver-manager/stargazers)
 
-A small, opinionated GTK application for **Fedora 43 KDE** that provides one-click setup for workstation tools, gaming utilities, and common desktop apps.
+Setting up a Linux workstation shouldn't be a chore. This project started as a simple script to help friends get their Fedora 43 KDE systems up and running perfectly. Today, it’s a fully-fledged GTK application designed to automate the "boring stuff" while keeping your system secure and lean.
 
-The UI runs unprivileged and system changes are done through a **polkit-protected helper**.
+Key Features:
+
+One-Click Setup: From gaming essentials to developer environments.
+
+Fedora-Centric: Optimized for Fedora 43’s specific repos and packages.
+
+Safe Execution: Uses a Polkit-authorized backend to ensure you stay in control of system changes.
 
 ---
 
