@@ -154,7 +154,6 @@ You can install only Flatpak rows; each prompts for user/system scope.
 - Maintainer/developer workflow: see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
-
 ## 📜 License
 
 This project is licensed under the **GNU GPL v3.0**. See [LICENSE](LICENSE).
