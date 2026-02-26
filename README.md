@@ -8,7 +8,7 @@
 [![Shell](https://img.shields.io/badge/Script-Shell-4EAA25?logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Fedora](https://img.shields.io/badge/Platform-Fedora%2043%20KDE-51A2DA?logo=fedora&logoColor=white)](https://fedoraproject.org/)
 [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-orange?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/ttheroux)
-[![Stars](https://img.shields.io/github/stars/KernelChief/alma-driver-manager?style=social)](https://github.com/KernelChief/alma-driver-manager/stargazers)
+[![Stars](https://img.shields.io/github/stars/KernelChief/Workstation-Starter-Kit?style=social)](https://github.com/KernelChief/Workstation-Starter-Kit/stargazers)
 
 Setting up a Linux workstation shouldn't be a chore. This project started as a simple script to help friends get their Fedora 43 KDE systems up and running perfectly. Today, it’s a fully-fledged GTK application designed to automate the "boring stuff" while keeping your system secure and lean.
 
@@ -40,7 +40,7 @@ Safe Execution: Uses a Polkit-authorized backend to ensure you stay in control o
 
 Go to the project releases page:
 
-https://github.com/KernelChief/alma-driver-manager/releases
+https://github.com/KernelChief/Workstation-Starter-Kit/releases
 
 Download the RPM named like:
 
@@ -154,7 +154,6 @@ You can install only Flatpak rows; each prompts for user/system scope.
 - Maintainer/developer workflow: see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
-
 ## 📜 License
 
 This project is licensed under the **GNU GPL v3.0**. See [LICENSE](LICENSE).
