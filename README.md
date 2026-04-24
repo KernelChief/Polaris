@@ -10,15 +10,15 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-orange?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/ttheroux)
 [![Stars](https://img.shields.io/github/stars/KernelChief/Workstation-Starter-Kit?style=social)](https://github.com/KernelChief/Workstation-Starter-Kit/stargazers)
 
-Setting up a Linux workstation shouldn't be a chore. This project started as a simple script to help friends get their Fedora 43 KDE systems up and running perfectly. Today, it’s a fully-fledged GTK application designed to automate the "boring stuff" while keeping your system secure and lean.
+Setting up a Linux workstation shouldn’t be a chore.
 
-Key Features:
+This project started as a set of **Ansible playbooks** to help friends deploy a clean Fedora KDE environment — the same way, every time. As more people started asking to use it, it became clear that a command-line playbook wasn’t the right experience for everyone. So it grew into a **Qt (PySide6) desktop application** that wraps all those same actions behind a simple point-and-click interface — no terminal required.
 
-One-Click Setup: From gaming essentials to developer environments.
+**Key Features:**
 
-Fedora-Centric: Optimized for Fedora 43’s specific repos and packages.
-
-Safe Execution: Uses a Polkit-authorized backend to ensure you stay in control of system changes.
+- **One-click setup:** From gaming essentials to developer environments, RPM Fusion, NVIDIA/AMD drivers, and more.
+- **Fedora 43 KDE-native:** Optimized for Fedora 43 KDE with `dnf5`, Btrfs, Flatpak, and KDE-first tools.
+- **Safe execution:** The UI runs as your normal user. Privileged actions go through a Polkit-authorized helper — you stay in control.
 
 ---
 
@@ -108,15 +108,17 @@ Depending on feature, Workstation Starter Kit uses:
 
 Includes install/remove workflows for:
 
-- Essential and Monitoring setup bundles
-- SELinux helper flow (including enforcing → permissive/disabled prompt)
-- ZRAM profile
-- 1Password, Proton Pass, Tailscale
-- Gaming stack (Steam, Lutris, Wine, GameMode, Gamescope, MangoHud, GOverlay, etc.)
-- Utility/media apps (OBS Studio, VLC, Btrfs Assistant, Distrobox, Chrome, Zoom)
-- Flatpak apps (Spotify, LibreOffice, Discord, Slack, Mattermost, Boxflat, BoxBuddy)
+- **Repos:** RPM Fusion (Free + Non-Free), 1Password, Tailscale, Microsoft (VS Code), NVIDIA CUDA
+- **System:** Essential tools, ZRAM profile, SELinux mode switch, Snapper (Btrfs snapshots)
+- **Drivers:** NVIDIA open kernel modules, AMD GPU tools (`radeontop`, VA-API)
+- **Security:** 1Password, Proton Pass, Tailscale
+- **Gaming:** Steam, Lutris, Wine, GameMode, Gamescope, MangoHud, GOverlay, Faugus Launcher, Heroic, CurseForge, ProtonUp-Qt, Bottles, Prism Launcher
+- **Hardware tools:** LACT, CoolerControl, OpenRGB, Piper, Input Remapper, Btrfs Assistant
+- **Containers:** Podman, Distrobox, BoxBuddy, Podman Desktop
+- **Media & Apps:** OBS Studio, VLC, EasyEffects, Flameshot, Chrome, Zoom, VS Code
+- **Flatpak:** Spotify, Discord, Vesktop, Slack, LibreOffice, GIMP, Kdenlive, Signal, Element, Telegram, and more
 
-The in-app list is the source of truth.
+The in-app feature list is the source of truth — the app auto-detects what's already installed.
 
 ---
 

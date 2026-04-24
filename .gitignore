@@ -11,3 +11,13 @@ __pycache__/
 rpmbuild/
 *.rpm
 
+# --- Claude Code & AI ---
+.claude/
+.claudeignore
+CLAUDE.md
+
+# --- Local Workspace ---
+.idea/
+venv/
+.venv/
+*.bak

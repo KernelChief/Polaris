@@ -244,6 +244,61 @@ remove_tailscale_repo() {
   rm -f /etc/yum.repos.d/tailscale.repo
 }
 
+enable_rpmfusion() {
+  local fedora_ver
+  fedora_ver="$(rpm -E '%fedora')"
+  pm_install \
+    "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${fedora_ver}.noarch.rpm" \
+    "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${fedora_ver}.noarch.rpm"
+}
+
+remove_rpmfusion() {
+  pm_remove rpmfusion-free-release rpmfusion-nonfree-release || true
+}
+
+ensure_vscode_repo() {
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  cat >/etc/yum.repos.d/vscode.repo <<'REPO'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+REPO
+  chmod 0644 /etc/yum.repos.d/vscode.repo
+}
+
+remove_vscode_repo() {
+  rm -f /etc/yum.repos.d/vscode.repo
+}
+
+install_nvidia_drivers() {
+  local fedora_ver arch distro repo_url
+  fedora_ver="$(rpm -E '%fedora')"
+  arch="x86_64"
+  distro="fedora${fedora_ver}"
+  repo_url="https://developer.download.nvidia.com/compute/cuda/repos/${distro}/${arch}/cuda-${distro}.repo"
+
+  log "Installing kernel development headers..."
+  pm_install kernel-devel-matched kernel-headers
+
+  log "Adding NVIDIA CUDA repository..."
+  dnf config-manager addrepo --from-repofile="${repo_url}" || \
+    dnf config-manager --add-repo "${repo_url}" || true
+  dnf clean expire-cache
+
+  log "Installing nvidia-open (open kernel modules)..."
+  pm_install nvidia-open
+
+  log "NVIDIA drivers installed. A reboot is required to activate the drivers."
+}
+
+remove_nvidia_drivers() {
+  pm_remove nvidia-open cuda-drivers || true
+  rm -f /etc/yum.repos.d/cuda-fedora*.repo || true
+}
+
 install_faugus_launcher() {
   pm_install kernel-modules-extra dkms --refresh || true
   enable_copr "faugus/faugus-launcher"
@@ -327,6 +382,12 @@ case "${action}" in
   remove_1password_repo) remove_1password_repo ;;
   ensure_tailscale_repo) ensure_tailscale_repo ;;
   remove_tailscale_repo) remove_tailscale_repo ;;
+  enable_rpmfusion) enable_rpmfusion ;;
+  remove_rpmfusion) remove_rpmfusion ;;
+  ensure_vscode_repo) ensure_vscode_repo ;;
+  remove_vscode_repo) remove_vscode_repo ;;
+  install_nvidia_drivers) install_nvidia_drivers ;;
+  remove_nvidia_drivers) remove_nvidia_drivers ;;
   install_faugus_launcher) install_faugus_launcher ;;
   install_lact) install_lact ;;
   remove_lact) remove_lact ;;

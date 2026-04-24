@@ -4,26 +4,25 @@ Name:           workstation-starter-kit
 %{!?app_version:%global app_version 1.0}
 Version:        %{app_version}
 Release:        1%{?dist}
-Summary:        Simple GTK bootstrap assistant for RPM workstations
+Summary:        Qt bootstrap assistant for Fedora workstations
 License:        GPL-3.0-or-later
 URL:            https://github.com/KernelChief/workstation-starter-kit
 BuildArch:      noarch
 
 Requires:       python3
-Requires:       python3-gobject
-Requires:       gtk3
+Requires:       python3-pyside6
 Requires:       polkit
 Requires:       coreutils
 Requires:       curl
 Requires:       systemd
-Requires:       dnf
+Requires:       dnf5
 
 Source0:        workstation-starter-kit-%{version}.tar.gz
 
 %description
-Workstation Starter Kit is a simple GTK utility for RPM-based distributions.
-It provides one-click install/remove actions for workstation bootstrap tasks
-using a PolicyKit-protected helper.
+Workstation Starter Kit is a Qt-based graphical utility for Fedora workstations.
+It provides one-click install/remove actions for common workstation packages and
+drivers using a PolicyKit-protected helper.
 
 %prep
 %setup -q
