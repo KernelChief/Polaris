@@ -4,7 +4,7 @@ set -euo pipefail
 
 action="${1:-}"
 
-log() { echo "[workstation-starter-kit-helper] $*"; }
+log() { echo "[polaris-helper] $*"; }
 
 pkg_mgr() {
   if command -v dnf >/dev/null 2>&1; then
@@ -194,47 +194,6 @@ remove_appimage_glob() {
   fi
 }
 
-group_packages() {
-  local group="${1:-}"
-  case "${group}" in
-    essential)
-      echo "git curl zsh python3-pip python3-devel cifs-utils nfs-utils samba-client fastfetch ncdu fwupd chrony irqbalance"
-      ;;
-    monitoring)
-      echo "htop btop nvtop lm_sensors smartmontools"
-      ;;
-    gaming)
-      echo "steam lutris wine gamemode gamescope mangohud goverlay piper openrgb"
-      ;;
-    *)
-      echo ""
-      ;;
-  esac
-}
-
-install_group() {
-  local group="${1:-}"
-  local pkgs
-  pkgs="$(group_packages "${group}")"
-  [[ -n "${pkgs}" ]] || { echo "ERROR: unknown group: ${group}" >&2; exit 2; }
-  if [[ "${group}" == "gaming" ]]; then
-    enable_steam_repo_if_present
-  fi
-  # shellcheck disable=SC2086
-  pm_install ${pkgs}
-}
-
-remove_group() {
-  local group="${1:-}"
-  local pkgs
-  pkgs="$(group_packages "${group}")"
-  [[ -n "${pkgs}" ]] || { echo "ERROR: unknown group: ${group}" >&2; exit 2; }
-  # shellcheck disable=SC2086
-  pm_remove ${pkgs} || true
-  if [[ "${group}" == "gaming" ]]; then
-    disable_steam_repo_if_present
-  fi
-}
 
 remove_1password_repo() {
   rm -f /etc/yum.repos.d/1password.repo
@@ -242,6 +201,61 @@ remove_1password_repo() {
 
 remove_tailscale_repo() {
   rm -f /etc/yum.repos.d/tailscale.repo
+}
+
+enable_rpmfusion() {
+  local fedora_ver
+  fedora_ver="$(rpm -E '%fedora')"
+  pm_install \
+    "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${fedora_ver}.noarch.rpm" \
+    "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${fedora_ver}.noarch.rpm"
+}
+
+remove_rpmfusion() {
+  pm_remove rpmfusion-free-release rpmfusion-nonfree-release || true
+}
+
+ensure_vscode_repo() {
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  cat >/etc/yum.repos.d/vscode.repo <<'REPO'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+REPO
+  chmod 0644 /etc/yum.repos.d/vscode.repo
+}
+
+remove_vscode_repo() {
+  rm -f /etc/yum.repos.d/vscode.repo
+}
+
+install_nvidia_drivers() {
+  local fedora_ver arch distro repo_url
+  fedora_ver="$(rpm -E '%fedora')"
+  arch="x86_64"
+  distro="fedora${fedora_ver}"
+  repo_url="https://developer.download.nvidia.com/compute/cuda/repos/${distro}/${arch}/cuda-${distro}.repo"
+
+  log "Installing kernel development headers..."
+  pm_install kernel-devel-matched kernel-headers
+
+  log "Adding NVIDIA CUDA repository..."
+  dnf config-manager addrepo --from-repofile="${repo_url}" || \
+    dnf config-manager --add-repo "${repo_url}" || true
+  dnf clean expire-cache
+
+  log "Installing nvidia-open (open kernel modules)..."
+  pm_install nvidia-open
+
+  log "NVIDIA drivers installed. A reboot is required to activate the drivers."
+}
+
+remove_nvidia_drivers() {
+  pm_remove nvidia-open cuda-drivers || true
+  rm -f /etc/yum.repos.d/cuda-fedora*.repo || true
 }
 
 install_faugus_launcher() {
@@ -282,6 +296,37 @@ remove_pulsemeeter() {
   python3 -m pip uninstall -y pulsemeeter || true
 }
 
+setup_flathub() {
+  command -v flatpak >/dev/null 2>&1 || pm_install flatpak
+  flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo
+}
+
+remove_flathub() {
+  flatpak remote-delete --system flathub 2>/dev/null || true
+}
+
+JETBRAINS_TOOLBOX_URL="https://data.services.jetbrains.com/products/download?platform=linux&code=TBA"
+
+install_jetbrains_toolbox() {
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "${tmpdir}"' EXIT
+
+  log "Downloading JetBrains Toolbox..."
+  curl -fsSL -o "${tmpdir}/toolbox.tar.gz" "${JETBRAINS_TOOLBOX_URL}"
+  tar -xzf "${tmpdir}/toolbox.tar.gz" -C "${tmpdir}"
+
+  local binary
+  binary="$(find "${tmpdir}" -name "jetbrains-toolbox" -type f | head -1)"
+  [[ -n "${binary}" ]] || { echo "ERROR: jetbrains-toolbox binary not found in archive" >&2; exit 2; }
+
+  install -D -m 0755 "${binary}" /usr/local/bin/jetbrains-toolbox
+}
+
+remove_jetbrains_toolbox() {
+  rm -f /usr/local/bin/jetbrains-toolbox
+}
+
 install_flatpak_app() {
   local appid="${1:-}"
   local scope="${2:-system}"
@@ -310,11 +355,8 @@ case "${action}" in
   enable_copr) enable_copr "${2:-}" ;;
   enable_steam_repo_if_present) enable_steam_repo_if_present ;;
   disable_steam_repo_if_present) disable_steam_repo_if_present ;;
-  install_group) install_group "${2:-}" ;;
-  remove_group) remove_group "${2:-}" ;;
   install_pkg) pm_install "${2:-}" ;;
   remove_pkg) pm_remove "${2:-}" || true ;;
-  install_pkg_url) install_url_rpm "${2:-}" ;;
   install_packages) shift; install_packages "$@" ;;
   remove_packages) shift; remove_packages "$@" ;;
   install_url_rpm) install_url_rpm "${2:-}" ;;
@@ -327,6 +369,12 @@ case "${action}" in
   remove_1password_repo) remove_1password_repo ;;
   ensure_tailscale_repo) ensure_tailscale_repo ;;
   remove_tailscale_repo) remove_tailscale_repo ;;
+  enable_rpmfusion) enable_rpmfusion ;;
+  remove_rpmfusion) remove_rpmfusion ;;
+  ensure_vscode_repo) ensure_vscode_repo ;;
+  remove_vscode_repo) remove_vscode_repo ;;
+  install_nvidia_drivers) install_nvidia_drivers ;;
+  remove_nvidia_drivers) remove_nvidia_drivers ;;
   install_faugus_launcher) install_faugus_launcher ;;
   install_lact) install_lact ;;
   remove_lact) remove_lact ;;
@@ -336,11 +384,15 @@ case "${action}" in
   remove_pulsemeeter) remove_pulsemeeter ;;
   install_appimage) install_appimage "${2:-}" "${3:-}" ;;
   remove_appimage_glob) remove_appimage_glob "${2:-}" ;;
+  setup_flathub) setup_flathub ;;
+  remove_flathub) remove_flathub ;;
+  install_jetbrains_toolbox) install_jetbrains_toolbox ;;
+  remove_jetbrains_toolbox) remove_jetbrains_toolbox ;;
   install_flatpak_app) install_flatpak_app "${2:-}" "${3:-system}" ;;
   remove_flatpak_app) remove_flatpak_app "${2:-}" ;;
   *)
     cat >&2 <<'USAGE'
-Usage: workstation-starter-kit-helper <action> [args]
+Usage: polaris-helper <action> [args]
 USAGE
     exit 1
     ;;

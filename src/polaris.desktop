@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 [Desktop Entry]
-Name=Workstation Starter Kit
-Comment=Simple RPM workstation bootstrap assistant
-Exec=workstation-starter-kit
+Name=Polaris
+Comment=One-click app and driver installer for Fedora workstations
+Exec=polaris
 Icon=computer
 Terminal=false
 Type=Application

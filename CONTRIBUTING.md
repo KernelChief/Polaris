@@ -1,4 +1,4 @@
-# Contributing to Workstation Starter Kit
+# Contributing to Polaris
 
 Thanks for your interest in contributing! This project is friendly to new
 contributors and first-time PRs. The goal is to keep the installer simple,
@@ -10,7 +10,7 @@ project interactions.
 ## How to contribute (issues first)
 
 1. **Open an issue** describing the bug, feature, or improvement.
-2. We’ll discuss scope and approach.
+2. We'll discuss scope and approach.
 3. Submit a pull request once the plan is clear.
 
 This helps avoid duplicated effort and keeps changes aligned with the project
@@ -23,12 +23,12 @@ focused.
 
 ## Maintainer workflow: adding/editing apps
 
-Workstation Starter Kit is intentionally data-driven.
+Polaris is intentionally data-driven.
 
 Most app changes should be done in:
 
-- `src/workstation-starter-kit` (the `FEATURES` list)
-- `src/workstation-starter-kit-helper` (helper actions)
+- `src/polaris` (the `FEATURES` list)
+- `src/polaris-helper` (helper actions)
 
 ### 1) Add a new app/feature entry in `FEATURES`
 
@@ -74,7 +74,7 @@ If you need a new pattern, add it in `_feature_applied()`.
 ### 3) Wire helper actions
 
 Every action in `install` / `remove` must exist in
-`src/workstation-starter-kit-helper` dispatcher.
+`src/polaris-helper` dispatcher.
 
 If missing, add:
 
@@ -84,8 +84,8 @@ If missing, add:
 ### 4) Validate before PR
 
 ```bash
-python3 -m py_compile src/workstation-starter-kit
-bash -n src/workstation-starter-kit-helper
+python3 -m py_compile src/polaris
+bash -n src/polaris-helper
 ```
 
 ## Testing & building
@@ -97,15 +97,15 @@ Basic checks:
 Build the RPM locally (Fedora 43 example):
 
 ```bash
-sudo dnf install -y rpm-build rpmdevtools rsync tar python3-gobject gtk3 polkit
+sudo dnf install -y rpm-build rpmdevtools rsync tar python3-pyside6 polkit
 rpmdev-setuptree
 ./src/packaging/build-rpm.sh 1.0.0
 ```
 
 Build artifacts are written to:
 
-- `~/rpmbuild/RPMS/noarch/workstation-starter-kit-<version>-1.fc43.noarch.rpm`
-- `~/rpmbuild/SRPMS/workstation-starter-kit-<version>-1.fc43.src.rpm`
+- `~/rpmbuild/RPMS/noarch/polaris-<version>-1.fc43.noarch.rpm`
+- `~/rpmbuild/SRPMS/polaris-<version>-1.fc43.src.rpm`
 
 ## Submitting a PR
 
@@ -115,4 +115,4 @@ Build artifacts are written to:
 
 ## Questions
 
-If you’re unsure about anything, open an issue and ask — it’s welcome.
+If you're unsure about anything, open an issue and ask — it's welcome.

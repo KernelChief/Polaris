@@ -187,7 +187,7 @@ jobs:
           prerelease: ${{ contains(steps.resolve_tag.outputs.tag_name, '-rc') || contains(steps.resolve_tag.outputs.tag_name, '-beta') || contains(steps.resolve_tag.outputs.tag_name, '-alpha') }}
           generate_release_notes: false
           body: |
-            ## 🎉 Workstation Starter Kit ${{ steps.resolve_tag.outputs.tag_name }}
+            ## 🚀 Polaris ${{ steps.resolve_tag.outputs.tag_name }}
 
             ### Highlights
 
