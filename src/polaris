@@ -10,7 +10,7 @@
 #      ["install_pkg", "vlc"]
 #      ["install_url_rpm", "https://..."]
 #      ["install_flatpak_app", "com.example.App", "system"]
-# 4) Make sure each action exists in src/workstation-starter-kit-helper.
+# 4) Make sure each action exists in src/polaris-helper.
 #
 # Flatpak-only entries (id starts with "flatpak_") need only a "check"
 # key — install/remove are handled automatically using the appid.
@@ -30,10 +30,99 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QObject
 from PySide6.QtGui import QFont
 
-SYSTEM_HELPER = "/usr/libexec/workstation-starter-kit-helper"
-LOCAL_HELPER = str((Path(__file__).resolve().parent / "workstation-starter-kit-helper"))
+# ── Style constants ────────────────────────────────────────────────────────
+
+_GREEN      = "#2ec27e"
+_GREEN_DARK = "#26a269"
+_RED        = "#e01b24"
+_RED_DARK   = "#c01c28"
+_AMBER      = "#e5a50a"
+
+_BTN_INSTALL = (
+    f"QPushButton {{ background:{_GREEN}; color:white; border:none; border-radius:7px; font-weight:bold; }}"
+    f"QPushButton:hover {{ background:{_GREEN_DARK}; }}"
+    f"QPushButton:disabled {{ background:palette(mid); color:palette(button); border:none; }}"
+)
+_BTN_REMOVE = (
+    f"QPushButton {{ background:{_RED}; color:white; border:none; border-radius:7px; }}"
+    f"QPushButton:hover {{ background:{_RED_DARK}; }}"
+    f"QPushButton:disabled {{ background:palette(mid); color:palette(button); border:none; }}"
+)
+_BADGE_ON   = f"background:{_GREEN}; color:white; border-radius:10px; padding:2px 10px; font-weight:bold;"
+_BADGE_OFF  = "background:palette(alternateBase); color:palette(mid); border-radius:10px; padding:2px 10px;"
+_BADGE_BUSY = f"background:{_AMBER}; color:white; border-radius:10px; padding:2px 10px;"
+
+APP_STYLE = """
+QFrame#card {
+    background-color: palette(base);
+    border: 1.5px solid palette(mid);
+    border-radius: 10px;
+}
+QFrame#card:hover {
+    border-color: #3584e4;
+    background-color: palette(alternateBase);
+}
+QLineEdit#search {
+    border: 2px solid palette(mid);
+    border-radius: 18px;
+    padding: 6px 16px;
+    background: palette(base);
+}
+QLineEdit#search:focus {
+    border-color: #3584e4;
+}
+QTabWidget::pane {
+    border: 1.5px solid palette(mid);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+}
+QTabBar::tab {
+    padding: 8px 14px;
+    margin-right: 2px;
+    border-radius: 8px 8px 0 0;
+}
+QTabBar::tab:selected {
+    background: #3584e4;
+    color: white;
+    font-weight: bold;
+}
+QTabBar::tab:hover:!selected {
+    background: palette(alternateBase);
+}
+QPushButton {
+    border-radius: 7px;
+    padding: 5px 14px;
+    border: 1.5px solid palette(mid);
+    background-color: palette(button);
+}
+QPushButton:hover {
+    border-color: #3584e4;
+    background-color: palette(highlight);
+    color: palette(highlightedText);
+}
+QScrollArea {
+    border: none;
+    background: transparent;
+}
+QScrollBar:vertical {
+    width: 8px;
+    background: transparent;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: palette(mid);
+    border-radius: 4px;
+    min-height: 30px;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
+"""
+
+SYSTEM_HELPER = "/usr/libexec/polaris-helper"
+LOCAL_HELPER = str((Path(__file__).resolve().parent / "polaris-helper"))
 
 PROTON_PASS_URL     = "https://proton.me/download/pass/linux/proton-pass-1.34.2-1.x86_64.rpm"
+JETBRAINS_TOOLBOX_URL = "https://data.services.jetbrains.com/products/download?platform=linux&code=TBA"
 APPIMAGELAUNCHER_URL = "https://github.com/TheAssassin/AppImageLauncher/releases/download/v3.0.0-beta-3/appimagelauncher_3.0.0-beta-2-gha287.96cb937_x86_64.rpm"
 HEROIC_URL          = "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.19.1/Heroic-2.19.1-linux-x86_64.AppImage"
 CURSEFORGE_URL      = "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.AppImage"
@@ -54,6 +143,14 @@ FEATURES = [
         "install": [["enable_rpmfusion"]],
         "remove": [["remove_rpmfusion"]],
         "check": {"kind": "rpm_all", "pkgs": ["rpmfusion-free-release", "rpmfusion-nonfree-release"]},
+    },
+    {
+        "id": "flathub",
+        "name": "📦 Flathub Remote (Recommended)",
+        "desc": "Add the Flathub Flatpak repository — required for all Flatpak apps",
+        "install": [["setup_flathub"]],
+        "remove":  [["remove_flathub"]],
+        "check":   {"kind": "flatpak_remote", "remote": "flathub"},
     },
     {
         "id": "essential",
@@ -305,18 +402,45 @@ FEATURES = [
      "check": {"kind": "flatpak", "appid": "io.element.Element"}},
     {"id": "flatpak_telegram",    "name": "✈️ Telegram (Flatpak)",    "desc": "Telegram desktop messaging app",
      "check": {"kind": "flatpak", "appid": "org.telegram.desktop"}},
+    {
+        "id": "jetbrains_toolbox",
+        "name": "🧰 JetBrains Toolbox",
+        "desc": "Manage all JetBrains IDEs (PyCharm, IntelliJ, Rider…) from one launcher",
+        "install": [["install_jetbrains_toolbox"]],
+        "remove":  [["remove_jetbrains_toolbox"]],
+        "check":   {"kind": "file", "path": "/usr/local/bin/jetbrains-toolbox"},
+    },
 ]
 
 FEATURE_BY_ID      = {f["id"]: f for f in FEATURES}
 FLATPAK_FEATURE_IDS = {f["id"] for f in FEATURES if f["id"].startswith("flatpak_")}
 
-RECOMMENDED_BUNDLE = ["rpmfusion", "essential", "monitoring", "zram_profile"]
+RECOMMENDED_BUNDLE = ["rpmfusion", "flathub", "essential", "monitoring", "zram_profile"]
 GAMING_BUNDLE = [
     "rpmfusion",
     "steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
     "faugus_launcher", "appimagelauncher", "heroic_appimage",
     "openrgbtool", "lact", "coolercontrol", "obs_studio", "easyeffects",
     "flatpak_protonupqt", "flatpak_bottles",
+]
+
+TABS = [
+    ("🚀 Get Started",  ["rpmfusion", "flathub", "essential", "monitoring", "zram_profile"]),
+    ("🔌 Drivers",      ["nvidia_drivers", "amd_tools"]),
+    ("🔐 Security",     ["onepassword", "proton_pass", "tailscale"]),
+    ("🎮 Gaming",       ["steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
+                         "faugus_launcher", "appimagelauncher", "heroic_appimage", "curseforge_appimage",
+                         "input_remapper", "flatpak_protonupqt", "flatpak_bottles", "flatpak_boxflat",
+                         "flatpak_prismlauncher"]),
+    ("📦 Containers",   ["podman", "distrobox", "flatpak_boxbuddy", "flatpak_podman_desktop"]),
+    ("🛠️ Tools",        ["lact", "coolercontrol", "openrgbtool", "btrfs_assistant",
+                         "kdeconnect", "piper", "snapper", "flatpak_flatseal", "flatpak_warehouse"]),
+    ("🎬 Media",        ["obs_studio", "vlc", "easyeffects", "pulsemeeter_audio", "flameshot"]),
+    ("💻 Apps",         ["chrome", "zoom_rpm", "vscode", "jetbrains_toolbox",
+                         "flatpak_spotify", "flatpak_discord",
+                         "flatpak_vesktop", "flatpak_slack", "flatpak_mattermost",
+                         "flatpak_libreoffice", "flatpak_gimp", "flatpak_kdenlive",
+                         "flatpak_signal", "flatpak_element", "flatpak_telegram"]),
 ]
 
 
@@ -355,10 +479,10 @@ class HelperRunner(QObject):
 # Main window
 # ---------------------------------------------------------------------------
 
-class WorkstationStarterKit(QMainWindow):
+class Polaris(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Workstation Starter Kit")
+        self.setWindowTitle("Polaris")
         self.resize(1080, 750)
 
         self.helper        = SYSTEM_HELPER if Path(SYSTEM_HELPER).exists() else LOCAL_HELPER
@@ -367,7 +491,7 @@ class WorkstationStarterKit(QMainWindow):
         self._runners      = set()   # prevent GC while threads run
 
         self._build_ui()
-        self._append_log("Workstation Starter Kit ready.\n")
+        self._append_log("Polaris ready.\n")
         self.refresh_states()
 
     # ── UI construction ────────────────────────────────────────────────────
@@ -377,82 +501,125 @@ class WorkstationStarterKit(QMainWindow):
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
         layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(10)
+        layout.setSpacing(8)
 
         layout.addWidget(self._build_hero())
+
+        self.search = QLineEdit()
+        self.search.setObjectName("search")
+        self.search.setPlaceholderText("🔍  Search features…")
+        self.search.textChanged.connect(self._apply_filter)
+        layout.addWidget(self.search)
+
         layout.addWidget(self._build_tabs())
 
     def _build_hero(self):
         hero = QFrame()
-        hero.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Sunken)
+        hero.setObjectName("hero")
+        hero.setStyleSheet(
+            "QFrame#hero {"
+            "  background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #1a4c8c,stop:1 #2979d0);"
+            "  border-radius: 14px; border: none;"
+            "}"
+        )
         vbox = QVBoxLayout(hero)
-        vbox.setContentsMargins(14, 12, 14, 12)
-        vbox.setSpacing(8)
+        vbox.setContentsMargins(22, 18, 22, 18)
+        vbox.setSpacing(10)
 
-        title = QLabel("<b>Pick a feature, app, or bundle and click Install</b>")
-        title.setStyleSheet("font-size: 15px;")
+        title = QLabel("🚀  Polaris")
+        title.setStyleSheet("color:white; font-size:19px; font-weight:bold; background:transparent;")
         vbox.addWidget(title)
 
-        vbox.addWidget(QLabel("Click any feature to install it. If already installed, the button becomes Remove."))
-
-        selinux_hint = QLabel("Run this first — set SELinux to Permissive for best compatibility:")
-        vbox.addWidget(selinux_hint)
-
-        self.selinux_button = QPushButton("🛡️ Highly Recommended: Set SELinux Permissive")
-        self.selinux_button.clicked.connect(self.apply_selinux_recommended)
-        self.selinux_button.setFixedWidth(400)
-        vbox.addWidget(self.selinux_button)
-
-        bundle_hint = QLabel(
-            "Quick bundles: <b>Recommended</b> installs core essentials. "
-            "<b>Gaming Pack</b> installs popular gaming tools and performance utilities."
+        subtitle = QLabel(
+            "Set up your Fedora 43 KDE workstation in a few clicks. "
+            "New here? Hit <b>Recommended Setup</b> — it handles the essentials automatically. "
+            "Then explore the tabs for more."
         )
-        bundle_hint.setTextFormat(Qt.TextFormat.RichText)
-        bundle_hint.setWordWrap(True)
-        vbox.addWidget(bundle_hint)
+        subtitle.setTextFormat(Qt.TextFormat.RichText)
+        subtitle.setWordWrap(True)
+        subtitle.setStyleSheet("color:rgba(255,255,255,200); background:transparent; font-size:10pt;")
+        vbox.addWidget(subtitle)
 
         btn_row = QHBoxLayout()
-        b1 = QPushButton("✨ Recommended Setup (Core Essentials)")
-        b1.clicked.connect(lambda: self.run_bundle("Recommended", RECOMMENDED_BUNDLE))
-        btn_row.addWidget(b1)
-        b2 = QPushButton("🎮 Gaming Pack (Games + Performance)")
-        b2.clicked.connect(lambda: self.run_bundle("Gaming", GAMING_BUNDLE))
-        btn_row.addWidget(b2)
-        btn_row.addStretch()
-        vbox.addLayout(btn_row)
+        btn_row.setSpacing(10)
 
+        b_rec = QPushButton("✨  Recommended Setup")
+        b_rec.setFixedHeight(36)
+        b_rec.setStyleSheet(
+            "QPushButton { background:white; color:#1a4c8c; border:none; border-radius:9px;"
+            "              font-weight:bold; font-size:10pt; padding:0 18px; }"
+            "QPushButton:hover { background:#ddeeff; }"
+            "QPushButton:disabled { background:rgba(255,255,255,110); color:rgba(26,76,140,110); }"
+        )
+        b_rec.setToolTip("Installs RPM Fusion, essential tools, monitoring, and ZRAM — the ideal starting point.")
+        b_rec.clicked.connect(lambda: self.run_bundle("Recommended", RECOMMENDED_BUNDLE))
+        btn_row.addWidget(b_rec)
+
+        b_game = QPushButton("🎮  Gaming Pack")
+        b_game.setFixedHeight(36)
+        b_game.setStyleSheet(
+            "QPushButton { background:transparent; color:white; border:2px solid rgba(255,255,255,170);"
+            "              border-radius:9px; font-size:10pt; padding:0 18px; }"
+            "QPushButton:hover { background:rgba(255,255,255,20); border-color:white; }"
+            "QPushButton:disabled { color:rgba(255,255,255,80); border-color:rgba(255,255,255,60); }"
+        )
+        b_game.setToolTip("Steam, Lutris, MangoHud, Heroic, ProtonUp-Qt, and more.")
+        b_game.clicked.connect(lambda: self.run_bundle("Gaming", GAMING_BUNDLE))
+        btn_row.addWidget(b_game)
+
+        btn_row.addStretch()
+
+        self._selinux_style_active   = (
+            "QPushButton { background:transparent; color:rgba(255,255,255,210);"
+            "  border:1.5px solid rgba(255,255,255,130); border-radius:7px;"
+            "  font-size:9pt; padding:0 12px; }"
+            "QPushButton:hover { color:white; border-color:rgba(255,255,255,230); }"
+        )
+        self._selinux_style_done = (
+            "QPushButton { background:transparent; color:rgba(255,255,255,110);"
+            "  border:1.5px solid rgba(255,255,255,55); border-radius:7px;"
+            "  font-size:9pt; padding:0 12px; }"
+        )
+        self.selinux_button = QPushButton("🛡️  SELinux: Set Permissive")
+        self.selinux_button.setFixedHeight(32)
+        self.selinux_button.setStyleSheet(self._selinux_style_active)
+        self.selinux_button.setToolTip(
+            "Sets SELinux to Permissive for better app compatibility.\n"
+            "Recommended for most workstation setups."
+        )
+        self.selinux_button.clicked.connect(self.apply_selinux_recommended)
+        btn_row.addWidget(self.selinux_button)
+
+        vbox.addLayout(btn_row)
         return hero
 
     def _build_tabs(self):
         tabs = QTabWidget()
 
-        # Features tab
-        feat_widget = QWidget()
-        feat_layout = QVBoxLayout(feat_widget)
-        feat_layout.setContentsMargins(6, 6, 6, 6)
-        feat_layout.setSpacing(6)
+        for tab_name, feature_ids in TABS:
+            tab_widget = QWidget()
+            tab_layout = QVBoxLayout(tab_widget)
+            tab_layout.setContentsMargins(4, 6, 4, 4)
+            tab_layout.setSpacing(0)
 
-        self.search = QLineEdit()
-        self.search.setPlaceholderText("Filter features…")
-        self.search.textChanged.connect(self._apply_filter)
-        feat_layout.addWidget(self.search)
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            scroll_inner = QWidget()
+            rows_layout = QVBoxLayout(scroll_inner)
+            rows_layout.setContentsMargins(4, 4, 4, 4)
+            rows_layout.setSpacing(4)
+            rows_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        scroll_inner = QWidget()
-        self.rows_layout = QVBoxLayout(scroll_inner)
-        self.rows_layout.setContentsMargins(4, 4, 4, 4)
-        self.rows_layout.setSpacing(4)
-        self.rows_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+            for fid in feature_ids:
+                f = FEATURE_BY_ID.get(fid)
+                if f:
+                    self._add_row(f, rows_layout)
 
-        for f in FEATURES:
-            self._add_row(f)
-
-        scroll.setWidget(scroll_inner)
-        feat_layout.addWidget(scroll)
-        tabs.addTab(feat_widget, "Features")
+            scroll.setWidget(scroll_inner)
+            tab_layout.addWidget(scroll)
+            tabs.addTab(tab_widget, tab_name)
 
         # Logs tab
         log_widget = QWidget()
@@ -460,8 +627,8 @@ class WorkstationStarterKit(QMainWindow):
         log_layout.setContentsMargins(6, 6, 6, 6)
         log_layout.setSpacing(6)
 
-        clear_btn = QPushButton("Clear logs")
-        clear_btn.setFixedWidth(100)
+        clear_btn = QPushButton("Clear")
+        clear_btn.setFixedWidth(80)
         clear_btn.clicked.connect(lambda: self.log_view.clear())
         log_layout.addWidget(clear_btn)
 
@@ -469,21 +636,21 @@ class WorkstationStarterKit(QMainWindow):
         self.log_view.setReadOnly(True)
         self.log_view.setFont(QFont("monospace", 10))
         log_layout.addWidget(self.log_view)
-        tabs.addTab(log_widget, "Logs")
+        tabs.addTab(log_widget, "📜 Logs")
 
         return tabs
 
-    def _add_row(self, f: dict):
+    def _add_row(self, f: dict, parent_layout: QVBoxLayout):
         fid = f["id"]
 
         row = QFrame()
-        row.setFrameStyle(QFrame.Shape.StyledPanel)
+        row.setObjectName("card")
+        row.setAttribute(Qt.WidgetAttribute.WA_Hover)
         row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         hl = QHBoxLayout(row)
         hl.setContentsMargins(10, 8, 10, 8)
         hl.setSpacing(10)
 
-        # Name + description (left, takes remaining space)
         info = QWidget()
         info_vbox = QVBoxLayout(info)
         info_vbox.setContentsMargins(0, 0, 0, 0)
@@ -497,13 +664,11 @@ class WorkstationStarterKit(QMainWindow):
         info_vbox.addWidget(desc_lbl)
         hl.addWidget(info, 1)
 
-        # Status badge
         status_lbl = QLabel("Checking…")
         status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         status_lbl.setMinimumWidth(110)
         hl.addWidget(status_lbl)
 
-        # Busy indicator (indeterminate progress bar)
         spinner = QProgressBar()
         spinner.setRange(0, 0)
         spinner.setFixedSize(80, 14)
@@ -511,14 +676,12 @@ class WorkstationStarterKit(QMainWindow):
         spinner.setVisible(False)
         hl.addWidget(spinner)
 
-        # Install / Remove button
         action_btn = QPushButton("Install")
         action_btn.setFixedWidth(90)
         action_btn.setEnabled(False)
         action_btn.clicked.connect(lambda _checked, i=fid: self.on_click(i))
         hl.addWidget(action_btn)
 
-        # Optional Details button
         details_btn = None
         if f.get("contains"):
             details_btn = QPushButton("Details")
@@ -536,7 +699,7 @@ class WorkstationStarterKit(QMainWindow):
             "busy":     False,
             "applied":  False,
         }
-        self.rows_layout.addWidget(row)
+        parent_layout.addWidget(row)
 
     # ── Filtering ──────────────────────────────────────────────────────────
 
@@ -643,6 +806,17 @@ class WorkstationStarterKit(QMainWindow):
             return any(self._appimage_present(p) for p in check.get("patterns", []))
         if kind == "nvidia":
             return any(self._rpm_installed(pkg) for pkg in ("nvidia-open", "cuda-drivers", "akmod-nvidia"))
+        if kind == "flatpak_remote":
+            remote = check.get("remote", "flathub")
+            try:
+                out = subprocess.run(
+                    ["flatpak", "remotes"], capture_output=True, text=True, timeout=5
+                ).stdout
+                return remote in out
+            except Exception:
+                return False
+        if kind == "file":
+            return Path(check["path"]).exists()
         return False
 
     # ── State refresh ──────────────────────────────────────────────────────
@@ -653,13 +827,17 @@ class WorkstationStarterKit(QMainWindow):
             applied    = self._feature_applied(fid, repos)
             d["applied"] = applied
             if applied:
-                d["status"].setText("✅ Applied")
-                d["status"].setStyleSheet("color: green; font-weight: bold;")
+                d["status"].setText("✅  Installed")
+                d["status"].setStyleSheet(_BADGE_ON)
                 d["button"].setText("Remove")
+                if not d["busy"]:
+                    d["button"].setStyleSheet(_BTN_REMOVE)
             else:
-                d["status"].setText("➕ Available")
-                d["status"].setStyleSheet("")
+                d["status"].setText("Available")
+                d["status"].setStyleSheet(_BADGE_OFF)
                 d["button"].setText("Install")
+                if not d["busy"]:
+                    d["button"].setStyleSheet(_BTN_INSTALL)
             if not d["busy"]:
                 d["button"].setEnabled(not self.bundle_running)
 
@@ -668,10 +846,12 @@ class WorkstationStarterKit(QMainWindow):
         cm = self._selinux_config_mode()
         if rm in ("permissive", "disabled") or cm in ("permissive", "disabled"):
             mode = rm if rm in ("permissive", "disabled") else cm
-            self.selinux_button.setText(f"🛡️ SELinux {mode.capitalize()} ✅")
+            self.selinux_button.setText(f"🛡️  SELinux: {mode.capitalize()} ✅")
+            self.selinux_button.setStyleSheet(self._selinux_style_done)
             self.selinux_button.setEnabled(False)
         else:
-            self.selinux_button.setText("🛡️ Highly Recommended: Set SELinux Permissive")
+            self.selinux_button.setText("🛡️  SELinux: Set Permissive")
+            self.selinux_button.setStyleSheet(self._selinux_style_active)
             self.selinux_button.setEnabled(not self.bundle_running)
 
         self._apply_filter()
@@ -780,7 +960,7 @@ class WorkstationStarterKit(QMainWindow):
         d["button"].setEnabled(not busy and not self.bundle_running)
         if status:
             d["status"].setText(status)
-            d["status"].setStyleSheet("")
+            d["status"].setStyleSheet(_BADGE_BUSY)
         d["spinner"].setVisible(busy)
 
     def _done(self, fid: str):
@@ -901,8 +1081,10 @@ class WorkstationStarterKit(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("Workstation Starter Kit")
-    win = WorkstationStarterKit()
+    app.setApplicationName("Polaris")
+    app.setStyleSheet(APP_STYLE)
+    win = Polaris()
+    win.setMinimumSize(960, 620)
     win.show()
     sys.exit(app.exec())
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
-NAME="workstation-starter-kit"
+NAME="polaris"
 VERSION="${1:-1.0}"
 
 # Ensure rpmbuild tree exists

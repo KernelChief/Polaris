@@ -1,18 +1,20 @@
-# 🛠️ Workstation Starter Kit
+# 🚀 Polaris
 ## By friends, for friends—now for everyone.
 
-[![Last Commit](https://img.shields.io/github/last-commit/KernelChief/Workstation-Starter-Kit)](https://github.com/KernelChief/Workstation-Starter-Kit/commits)
-[![Repo Size](https://img.shields.io/github/repo-size/KernelChief/Workstation-Starter-Kit)](https://github.com/KernelChief/Workstation-Starter-Kit)
+[![Last Commit](https://img.shields.io/github/last-commit/KernelChief/polaris)](https://github.com/KernelChief/polaris/commits)
+[![Repo Size](https://img.shields.io/github/repo-size/KernelChief/polaris)](https://github.com/KernelChief/polaris)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Made%20with-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Shell](https://img.shields.io/badge/Script-Shell-4EAA25?logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Fedora](https://img.shields.io/badge/Platform-Fedora%2043%20KDE-51A2DA?logo=fedora&logoColor=white)](https://fedoraproject.org/)
 [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-orange?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/ttheroux)
-[![Stars](https://img.shields.io/github/stars/KernelChief/Workstation-Starter-Kit?style=social)](https://github.com/KernelChief/Workstation-Starter-Kit/stargazers)
+[![Stars](https://img.shields.io/github/stars/KernelChief/polaris?style=social)](https://github.com/KernelChief/polaris/stargazers)
 
 Setting up a Linux workstation shouldn’t be a chore.
 
 This project started as a set of **Ansible playbooks** to help friends deploy a clean Fedora KDE environment — the same way, every time. As more people started asking to use it, it became clear that a command-line playbook wasn’t the right experience for everyone. So it grew into a **Qt (PySide6) desktop application** that wraps all those same actions behind a simple point-and-click interface — no terminal required.
+
+**Why Polaris?** Polaris is the north star — always there, always reliable. It’s the first thing you find when you’re navigating somewhere new, which is exactly what this tool is for a fresh Fedora install.
 
 **Key Features:**
 
@@ -40,11 +42,11 @@ This project started as a set of **Ansible playbooks** to help friends deploy a 
 
 Go to the project releases page:
 
-https://github.com/KernelChief/Workstation-Starter-Kit/releases
+https://github.com/KernelChief/polaris/releases
 
 Download the RPM named like:
 
-- `workstation-starter-kit-X.X.X-X.fc43.noarch.rpm`
+- `polaris-X.X.X-X.fc43.noarch.rpm`
 
 Where:
 
@@ -58,13 +60,13 @@ Where:
 From the directory where the file was downloaded:
 
 ```bash
-sudo dnf install ./workstation-starter-kit-X.X.X-X.fc43.noarch.rpm
+sudo dnf install ./polaris-X.X.X-X.fc43.noarch.rpm
 ```
 
 This installs:
 
-- the GUI launcher (`workstation-starter-kit`)
-- the helper (`/usr/libexec/workstation-starter-kit-helper`)
+- the GUI launcher (`polaris`)
+- the helper (`/usr/libexec/polaris-helper`)
 - the polkit policy
 - the desktop entry
 
@@ -74,19 +76,19 @@ This installs:
 
 Launch from app menu:
 
-- **Workstation Starter Kit**
+- **Polaris**
 
 Or via terminal:
 
 ```bash
-workstation-starter-kit
+polaris
 ```
 
 ---
 
 ## 📦 Installation Methods
 
-Depending on feature, Workstation Starter Kit uses:
+Depending on feature, Polaris uses:
 
 - DNF package installs/removals
 - Official URL RPM installs (e.g. Chrome, Zoom)
@@ -99,8 +101,7 @@ Depending on feature, Workstation Starter Kit uses:
 
 ## 🧩 Supported Platform
 
-- **Primary target:** Fedora 43 KDE Workstation
-- **Best effort:** Other RPM-based distributions using `dnf`
+- **Target:** Fedora 43 KDE Workstation
 
 ---
 
@@ -126,9 +127,9 @@ The in-app feature list is the source of truth — the app auto-detects what's a
 
 - GUI process runs as normal user
 - Privileged actions are routed through:
-  - `pkexec /usr/libexec/workstation-starter-kit-helper ...`
+  - `pkexec /usr/libexec/polaris-helper ...`
 - Polkit action:
-  - `org.workstationstarterkit.manager`
+  - `io.github.kernelchief.polaris`
 - Authentication is requested only when needed
 
 ---
