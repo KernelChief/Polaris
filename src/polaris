@@ -1060,8 +1060,8 @@ class Polaris(QMainWindow):
     def _run_helper(self, args: list, on_done=None, on_abort=None):
         if not Path(self.helper).exists():
             self._append_log(f"ERROR: Helper not found: {self.helper}")
-            if on_abort:
-                on_abort()
+            if on_done:
+                on_done()
             return
 
         cmd = ["pkexec", self.helper] + [str(a) for a in args]
