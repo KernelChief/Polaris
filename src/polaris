@@ -319,6 +319,7 @@ FEATURES = [
      "install": [["install_pkg", "distrobox"]], "remove": [["remove_pkg", "distrobox"]],
      "check": {"kind": "rpm", "pkg": "distrobox"}},
     {"id": "flatpak_boxbuddy",       "name": "📦 BoxBuddy (Flatpak)",       "desc": "GUI front-end for Distrobox",
+     "dnf_deps": ["libglvnd-gles"],
      "check": {"kind": "flatpak", "appid": "io.github.dvlv.boxbuddyrs"}},
     {"id": "flatpak_podman_desktop", "name": "🐳 Podman Desktop (Flatpak)", "desc": "GUI for managing containers and Kubernetes",
      "check": {"kind": "flatpak", "appid": "io.podman_desktop.PodmanDesktop"}},
@@ -940,7 +941,8 @@ class Polaris(QMainWindow):
                 scope = self._pick_flatpak_scope(d["feature"]["name"])
                 if not scope:
                     return
-                actions = [["install_flatpak_app", appid, scope]]
+                deps = [["install_pkg", p] for p in d["feature"].get("dnf_deps", [])]
+                actions = deps + [["install_flatpak_app", appid, scope]]
                 label   = "Installing…"
         else:
             key     = "remove" if d["applied"] else "install"
@@ -1007,7 +1009,8 @@ class Polaris(QMainWindow):
             fid = queue[i]
             f   = FEATURE_BY_ID[fid]
             if fid in FLATPAK_FEATURE_IDS:
-                actions = [["install_flatpak_app", f["check"]["appid"], "system"]]
+                deps = [["install_pkg", p] for p in f.get("dnf_deps", [])]
+                actions = deps + [["install_flatpak_app", f["check"]["appid"], "system"]]
             else:
                 actions = f.get("install", [])
 
