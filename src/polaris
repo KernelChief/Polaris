@@ -319,7 +319,7 @@ FEATURES = [
      "install": [["install_pkg", "distrobox"]], "remove": [["remove_pkg", "distrobox"]],
      "check": {"kind": "rpm", "pkg": "distrobox"}},
     {"id": "flatpak_boxbuddy",       "name": "📦 BoxBuddy (Flatpak)",       "desc": "GUI front-end for Distrobox",
-     "dnf_deps": ["libglvnd-gles"],
+     "dnf_deps": ["libglvnd-gles"],  # missing on fresh Fedora; not removed on uninstall (system lib)
      "check": {"kind": "flatpak", "appid": "io.github.dvlv.boxbuddyrs"}},
     {"id": "flatpak_podman_desktop", "name": "🐳 Podman Desktop (Flatpak)", "desc": "GUI for managing containers and Kubernetes",
      "check": {"kind": "flatpak", "appid": "io.podman_desktop.PodmanDesktop"}},
@@ -451,7 +451,7 @@ TABS = [
 
 class HelperRunner(QObject):
     text_ready = Signal(str)
-    done       = Signal()
+    done       = Signal(int)
 
     def __init__(self, cmd: list):
         super().__init__()
@@ -461,6 +461,7 @@ class HelperRunner(QObject):
         threading.Thread(target=self._run, daemon=True).start()
 
     def _run(self):
+        rc = 1
         try:
             p = subprocess.Popen(
                 self._cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -473,7 +474,7 @@ class HelperRunner(QObject):
         except Exception as e:
             self.text_ready.emit(f"ERROR: {e}\n")
         finally:
-            self.done.emit()
+            self.done.emit(rc)
 
 
 # ---------------------------------------------------------------------------
@@ -979,7 +980,7 @@ class Polaris(QMainWindow):
                 if on_done:
                     on_done()
                 return
-            self._run_helper(queue[i], on_done=lambda: step(i + 1))
+            self._run_helper(queue[i], on_done=lambda: step(i + 1), on_abort=on_done)
 
         step()
 
@@ -1056,11 +1057,11 @@ class Polaris(QMainWindow):
             self.log_view.verticalScrollBar().maximum()
         )
 
-    def _run_helper(self, args: list, on_done=None):
+    def _run_helper(self, args: list, on_done=None, on_abort=None):
         if not Path(self.helper).exists():
             self._append_log(f"ERROR: Helper not found: {self.helper}")
-            if on_done:
-                on_done()
+            if on_abort:
+                on_abort()
             return
 
         cmd = ["pkexec", self.helper] + [str(a) for a in args]
@@ -1071,10 +1072,14 @@ class Polaris(QMainWindow):
 
         runner.text_ready.connect(self._append_log)
 
-        def on_runner_done():
+        def on_runner_done(rc: int):
             self._runners.discard(runner)
-            if on_done:
-                on_done()
+            if rc == 0:
+                if on_done:
+                    on_done()
+            else:
+                if on_abort:
+                    on_abort()
 
         runner.done.connect(on_runner_done)
         runner.start()
