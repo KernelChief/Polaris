@@ -334,8 +334,15 @@ install_flatpak_app() {
   [[ -n "${appid}" ]] || { echo "ERROR: missing appid" >&2; exit 2; }
   command -v flatpak >/dev/null 2>&1 || pm_install flatpak
   if [[ "${scope}" == "user" ]]; then
-    flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-    flatpak install -y --user flathub "${appid}"
+    local real_user
+    real_user="$(id -nu "${PKEXEC_UID:-0}" 2>/dev/null)" || real_user=""
+    if [[ -n "${real_user}" && "${real_user}" != "root" ]]; then
+      runuser -u "${real_user}" -- flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      runuser -u "${real_user}" -- flatpak install -y --user flathub "${appid}"
+    else
+      flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      flatpak install -y --user flathub "${appid}"
+    fi
   else
     flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo
     flatpak install -y --system flathub "${appid}"
@@ -346,8 +353,14 @@ remove_flatpak_app() {
   local appid="${1:-}"
   [[ -n "${appid}" ]] || { echo "ERROR: missing appid" >&2; exit 2; }
   command -v flatpak >/dev/null 2>&1 || exit 0
+  local real_user
+  real_user="$(id -nu "${PKEXEC_UID:-0}" 2>/dev/null)" || real_user=""
   flatpak uninstall -y --system "${appid}" || true
-  flatpak uninstall -y --user "${appid}" || true
+  if [[ -n "${real_user}" && "${real_user}" != "root" ]]; then
+    runuser -u "${real_user}" -- flatpak uninstall -y --user "${appid}" || true
+  else
+    flatpak uninstall -y --user "${appid}" || true
+  fi
 }
 
 case "${action}" in
