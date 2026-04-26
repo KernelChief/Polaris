@@ -18,20 +18,29 @@ Setting up a Linux workstation shouldn’t be a chore.
 
 ## 🚀 Quick Start (Recommended)
 
-### 1. Download the RPM
-Go to the project [releases page](https://github.com/KernelChief/polaris/releases) and download the latest `.rpm` file.
+The easiest way to install and keep Polaris updated is via our official COPR repository.
 
-> **COPR Status:** We are working on a COPR repository to enable `dnf upgrade` and eliminate GPG warnings. Until then, manual RPM installation is the primary method.
-
-### 2. Install the RPM
-From your terminal:
+### 1. Enable the Repository
+Open your terminal and run:
 ```bash
-sudo dnf install ./polaris-*.noarch.rpm
+sudo dnf copr enable tristantheroux/Polaris
 ```
-This installs the `polaris` GUI, the Polkit-authorized helper, and the desktop launcher.
+
+### 2. Install Polaris
+```bash
+sudo dnf install polaris
+```
 
 ### 3. Launch the App
 Find **Polaris** in your Application Menu or run `polaris` from the terminal.
+
+---
+
+### Alternative: Manual RPM Installation
+If you prefer not to use COPR, you can download the latest `.rpm` from the [releases page](https://github.com/KernelChief/polaris/releases).
+```bash
+sudo dnf install ./polaris-*.noarch.rpm
+```
 
 ## 🧩 Supported Platform
 
