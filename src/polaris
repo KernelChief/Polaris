@@ -25,9 +25,9 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QScrollArea, QTabWidget, QLineEdit,
-    QPlainTextEdit, QFrame, QMessageBox, QProgressBar, QSizePolicy,
+    QPlainTextEdit, QFrame, QMessageBox, QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtCore import Qt, Signal, QObject, QTimer
 from PySide6.QtGui import QFont
 
 # ── Style constants ────────────────────────────────────────────────────────
@@ -51,6 +51,8 @@ _BTN_REMOVE = (
 _BADGE_ON   = f"background:{_GREEN}; color:white; border-radius:10px; padding:2px 10px; font-weight:bold;"
 _BADGE_OFF  = "background:palette(alternateBase); color:palette(mid); border-radius:10px; padding:2px 10px;"
 _BADGE_BUSY = f"background:{_AMBER}; color:white; border-radius:10px; padding:2px 10px;"
+
+_SPINNER_FRAMES = "⣾⣽⣻⢿⡿⣟⣯⣷"
 
 APP_STYLE = """
 QFrame#card {
@@ -483,10 +485,15 @@ class Polaris(QMainWindow):
         self.setWindowTitle("Polaris")
         self.resize(1080, 750)
 
-        self.helper        = SYSTEM_HELPER if Path(SYSTEM_HELPER).exists() else LOCAL_HELPER
-        self.rows          = {}
-        self.bundle_running = False
-        self._runners      = set()   # prevent GC while threads run
+        self.helper          = SYSTEM_HELPER if Path(SYSTEM_HELPER).exists() else LOCAL_HELPER
+        self.rows            = {}
+        self.all_rows        = {}
+        self.bundle_running  = False
+        self._runners        = set()
+        self._spinner_frame  = 0
+        self._spinner_timer  = QTimer(self)
+        self._spinner_timer.setInterval(80)
+        self._spinner_timer.timeout.connect(self._tick_spinners)
 
         self._build_ui()
         self._append_log("Polaris ready.\n")
@@ -593,6 +600,26 @@ class Polaris(QMainWindow):
 
     def _build_tabs(self):
         tabs = QTabWidget()
+        self.tabs = tabs
+
+        # All tab — one row per feature, used for cross-category search
+        all_widget = QWidget()
+        all_layout = QVBoxLayout(all_widget)
+        all_layout.setContentsMargins(4, 6, 4, 4)
+        all_layout.setSpacing(0)
+        all_scroll = QScrollArea()
+        all_scroll.setWidgetResizable(True)
+        all_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        all_inner = QWidget()
+        all_rows_layout = QVBoxLayout(all_inner)
+        all_rows_layout.setContentsMargins(4, 4, 4, 4)
+        all_rows_layout.setSpacing(4)
+        all_rows_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        for f in FEATURES:
+            self._add_row(f, all_rows_layout, target_store=self.all_rows)
+        all_scroll.setWidget(all_inner)
+        all_layout.addWidget(all_scroll)
+        tabs.addTab(all_widget, "🔍 All")
 
         for tab_name, feature_ids in TABS:
             tab_widget = QWidget()
@@ -638,7 +665,7 @@ class Polaris(QMainWindow):
 
         return tabs
 
-    def _add_row(self, f: dict, parent_layout: QVBoxLayout):
+    def _add_row(self, f: dict, parent_layout: QVBoxLayout, target_store: dict = None):
         fid = f["id"]
 
         row = QFrame()
@@ -664,13 +691,12 @@ class Polaris(QMainWindow):
 
         status_lbl = QLabel("Checking…")
         status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        status_lbl.setMinimumWidth(110)
+        status_lbl.setFixedWidth(120)
         hl.addWidget(status_lbl)
 
-        spinner = QProgressBar()
-        spinner.setRange(0, 0)
-        spinner.setFixedSize(80, 14)
-        spinner.setTextVisible(False)
+        spinner = QLabel(_SPINNER_FRAMES[0])
+        spinner.setFixedWidth(20)
+        spinner.setAlignment(Qt.AlignmentFlag.AlignCenter)
         spinner.setVisible(False)
         hl.addWidget(spinner)
 
@@ -687,7 +713,8 @@ class Polaris(QMainWindow):
             details_btn.clicked.connect(lambda _checked, i=fid: self.show_feature_details(i))
             hl.addWidget(details_btn)
 
-        self.rows[fid] = {
+        store = target_store if target_store is not None else self.rows
+        store[fid] = {
             "feature":  f,
             "row":      row,
             "status":   status_lbl,
@@ -703,9 +730,12 @@ class Polaris(QMainWindow):
 
     def _apply_filter(self, *_):
         q = self.search.text().strip().lower()
-        for d in self.rows.values():
-            f = d["feature"]
-            d["row"].setVisible(q in (f["name"] + " " + f["desc"]).lower())
+        if q:
+            self.tabs.setCurrentIndex(0)
+        for store in (self.rows, self.all_rows):
+            for d in store.values():
+                f = d["feature"]
+                d["row"].setVisible(not q or q in (f["name"] + " " + f["desc"]).lower())
 
     # ── System state checks ────────────────────────────────────────────────
 
@@ -824,20 +854,24 @@ class Polaris(QMainWindow):
         for fid, d in self.rows.items():
             applied    = self._feature_applied(fid, repos)
             d["applied"] = applied
-            if applied:
-                d["status"].setText("✅  Installed")
-                d["status"].setStyleSheet(_BADGE_ON)
-                d["button"].setText("Remove")
+            for store in (self.rows, self.all_rows):
+                w = store.get(fid)
+                if w is None:
+                    continue
+                if applied:
+                    w["status"].setText("✅  Installed")
+                    w["status"].setStyleSheet(_BADGE_ON)
+                    w["button"].setText("Remove")
+                    if not d["busy"]:
+                        w["button"].setStyleSheet(_BTN_REMOVE)
+                else:
+                    w["status"].setText("Available")
+                    w["status"].setStyleSheet(_BADGE_OFF)
+                    w["button"].setText("Install")
+                    if not d["busy"]:
+                        w["button"].setStyleSheet(_BTN_INSTALL)
                 if not d["busy"]:
-                    d["button"].setStyleSheet(_BTN_REMOVE)
-            else:
-                d["status"].setText("Available")
-                d["status"].setStyleSheet(_BADGE_OFF)
-                d["button"].setText("Install")
-                if not d["busy"]:
-                    d["button"].setStyleSheet(_BTN_INSTALL)
-            if not d["busy"]:
-                d["button"].setEnabled(not self.bundle_running)
+                    w["button"].setEnabled(not self.bundle_running)
 
         # SELinux button state
         rm = self._selinux_mode()
@@ -954,17 +988,34 @@ class Polaris(QMainWindow):
     # ── Busy state ─────────────────────────────────────────────────────────
 
     def _set_busy(self, fid: str, busy: bool, status: str = None):
-        d = self.rows[fid]
-        d["busy"] = busy
-        d["button"].setEnabled(not busy and not self.bundle_running)
-        if status:
-            d["status"].setText(status)
-            d["status"].setStyleSheet(_BADGE_BUSY)
-        d["spinner"].setVisible(busy)
+        self.rows[fid]["busy"] = busy
+        for store in (self.rows, self.all_rows):
+            w = store.get(fid)
+            if w is None:
+                continue
+            w["button"].setEnabled(not busy and not self.bundle_running)
+            if status:
+                w["status"].setText(status)
+                w["status"].setStyleSheet(_BADGE_BUSY)
+            w["spinner"].setVisible(busy)
+            if busy:
+                w["spinner"].setText(_SPINNER_FRAMES[0])
+        if busy:
+            self._spinner_timer.start()
+        elif not any(d["busy"] for d in self.rows.values()):
+            self._spinner_timer.stop()
 
     def _done(self, fid: str):
         self._set_busy(fid, False)
         self.refresh_states()
+
+    def _tick_spinners(self):
+        self._spinner_frame = (self._spinner_frame + 1) % len(_SPINNER_FRAMES)
+        ch = _SPINNER_FRAMES[self._spinner_frame]
+        for store in (self.rows, self.all_rows):
+            for d in store.values():
+                if d["busy"]:
+                    d["spinner"].setText(ch)
 
     # ── Action sequencing ──────────────────────────────────────────────────
 
@@ -1048,9 +1099,12 @@ class Polaris(QMainWindow):
     # ── Button toggle ──────────────────────────────────────────────────────
 
     def _toggle_buttons(self, enabled: bool):
-        for d in self.rows.values():
+        for fid, d in self.rows.items():
             if not d["busy"]:
-                d["button"].setEnabled(enabled)
+                for store in (self.rows, self.all_rows):
+                    w = store.get(fid)
+                    if w:
+                        w["button"].setEnabled(enabled)
 
     # ── Helper subprocess ──────────────────────────────────────────────────
 
