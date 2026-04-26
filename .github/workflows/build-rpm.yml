@@ -234,14 +234,15 @@ jobs:
     if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'documentation')
 
     steps:
-      - name: Add/update PR comment with beta RPM download link
+      - name: Post new comment with beta RPM download link
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: beta-rpm
+          recreate: true
           message: |
-            ✅ Beta RPM is ready for this PR.
+            ✅ Beta RPM built for commit `${{ github.sha }}`.
 
-            Download it from this run's artifacts:
+            Download from this run's artifacts:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
 
             Install with:
@@ -249,5 +250,4 @@ jobs:
             sudo dnf install ./polaris-*.noarch.rpm
             ```
 
-            Expected artifact name:
-            - `rpm-f43-kde-pr${{ github.event.pull_request.number }}`
+            Artifact name: `rpm-f43-kde-pr${{ github.event.pull_request.number }}`
