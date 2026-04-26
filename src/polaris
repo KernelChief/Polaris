@@ -305,10 +305,6 @@ FEATURES = [
      "check": {"kind": "rpm", "pkg": "input-remapper"}},
     {"id": "flatpak_protonupqt", "name": "⬆️ ProtonUp-Qt (Flatpak)", "desc": "Install and manage Proton-GE and Wine-GE versions",
      "check": {"kind": "flatpak", "appid": "net.davidotek.pupgui2"}},
-    {"id": "flatpak_bottles",    "name": "🍾 Bottles (Flatpak)", "desc": "Manage Windows apps with Wine in isolated environments",
-     "check": {"kind": "flatpak", "appid": "com.usebottles.bottles"}},
-    {"id": "flatpak_boxflat",       "name": "🎮 Boxflat (Flatpak)",        "desc": "Racing wheel / controller configuration tool",
-     "check": {"kind": "flatpak", "appid": "io.github.wiiznokes.boxflat"}},
     {"id": "flatpak_prismlauncher", "name": "⛏️ Prism Launcher (Flatpak)", "desc": "Mod-friendly Minecraft launcher",
      "check": {"kind": "flatpak", "appid": "org.prismlauncher.PrismLauncher"}},
     # ── CONTAINERS ──────────────────────────────────────────────────────────
@@ -422,7 +418,7 @@ GAMING_BUNDLE = [
     "steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
     "faugus_launcher", "appimagelauncher", "heroic_appimage",
     "openrgbtool", "lact", "coolercontrol", "obs_studio", "easyeffects",
-    "flatpak_protonupqt", "flatpak_bottles",
+    "flatpak_protonupqt",
 ]
 
 TABS = [
@@ -431,7 +427,7 @@ TABS = [
     ("🔐 Security",     ["onepassword", "proton_pass", "tailscale"]),
     ("🎮 Gaming",       ["steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
                          "faugus_launcher", "appimagelauncher", "heroic_appimage", "curseforge_appimage",
-                         "input_remapper", "flatpak_protonupqt", "flatpak_bottles", "flatpak_boxflat",
+                         "input_remapper", "flatpak_protonupqt",
                          "flatpak_prismlauncher"]),
     ("📦 Containers",   ["podman", "distrobox", "flatpak_boxbuddy", "flatpak_podman_desktop"]),
     ("🛠️ Tools",        ["lact", "coolercontrol", "openrgbtool", "btrfs_assistant",
