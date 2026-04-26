@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 Name:           polaris
-%{!?app_version:%global app_version 1.0}
+%{!?app_version:%global app_version 1.0.1}
 Version:        %{app_version}
 Release:        1%{?dist}
 Summary:        One-click workstation setup assistant for Fedora KDE
@@ -47,5 +47,7 @@ install -D -m 0644 LICENSE \
 %{_datadir}/licenses/%{name}/LICENSE
 
 %changelog
-* Thu Apr 24 2026 KernelChief - 1.0-1
-- Rename project to Polaris; migrate UI to PySide6 (Qt6)
+* Sun Apr 26 2026 KernelChief - 1.0.1-1
+- Update to v1.0.1: Migrate to PySide6 and expand app library
+* Fri Apr 24 2026 KernelChief - 1.0.0-1
+- Initial release and rename to Polaris
