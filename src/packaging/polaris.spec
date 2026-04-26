@@ -17,7 +17,8 @@ Requires:       curl
 Requires:       systemd
 Requires:       dnf5
 
-Source0:        polaris-%{version}.tar.gz
+# Use the GitHub-generated tarball URL
+Source0:        https://github.com/KernelChief/Polaris/archive/refs/tags/v%{version}.tar.gz
 
 %description
 Polaris is a Qt-based graphical utility for Fedora 43 KDE workstations.
@@ -25,7 +26,8 @@ It provides one-click install/remove actions for common workstation packages,
 drivers, and Flatpak apps using a PolicyKit-protected helper.
 
 %prep
-%setup -q
+# GitHub tarballs unpack into a directory named 'Project-version'
+%setup -q -n Polaris-%{version}
 
 %install
 rm -rf %{buildroot}
