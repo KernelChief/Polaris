@@ -953,7 +953,7 @@ class Polaris(QMainWindow):
             label = "Removing…" if d["applied"] else "Installing…"
 
         self._set_busy(fid, True, label)
-        self._run_action_sequence(actions, on_done=lambda: self._done(fid))
+        self._run_action_sequence(actions, on_done=lambda: self._done(fid), on_abort=lambda: self._done(fid))
 
     # ── Busy state ─────────────────────────────────────────────────────────
 
