@@ -141,15 +141,15 @@ set_selinux_mode() {
   case "${mode}" in
     permissive)
       sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config || true
-      command -v setenforce >/dev/null 2>&1 && { setenforce 0 || true; }
+      if command -v setenforce >/dev/null 2>&1; then setenforce 0 || true; fi
       ;;
     enforcing)
       sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config || true
-      command -v setenforce >/dev/null 2>&1 && { setenforce 1 || true; }
+      if command -v setenforce >/dev/null 2>&1; then setenforce 1 || true; fi
       ;;
     disabled)
       sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config || true
-      command -v setenforce >/dev/null 2>&1 && { setenforce 0 || true; }
+      if command -v setenforce >/dev/null 2>&1; then setenforce 0 || true; fi
       ;;
     *)
       echo "ERROR: unsupported selinux mode: ${mode}" >&2
