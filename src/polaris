@@ -972,7 +972,7 @@ class Polaris(QMainWindow):
 
     # ── Action sequencing ──────────────────────────────────────────────────
 
-    def _run_action_sequence(self, actions: list, on_done=None):
+    def _run_action_sequence(self, actions: list, on_done=None, on_abort=None):
         queue = [a for a in actions if a]
 
         def step(i=0):
@@ -980,7 +980,7 @@ class Polaris(QMainWindow):
                 if on_done:
                     on_done()
                 return
-            self._run_helper(queue[i], on_done=lambda: step(i + 1), on_abort=on_done)
+            self._run_helper(queue[i], on_done=lambda: step(i + 1), on_abort=on_abort)
 
         step()
 
