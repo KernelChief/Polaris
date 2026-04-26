@@ -10,7 +10,6 @@
 | Symbol | Meaning |
 |--------|---------|
 | ✅ Done | Completed and committed |
-| 🔄 In Progress | Done but not yet committed / needs follow-up |
 | 🔲 Planned | Decided, not started |
 | 💡 Idea | Under consideration |
 
@@ -38,13 +37,14 @@
 |--------|------|
 | ✅ | Rewrite UI from GTK3 (`gi`/`Gtk`) to **PySide6** (Qt6) |
 | ✅ | Replace `GLib` threading with `QObject` + `Signal` + daemon thread |
-| ✅ | Add indeterminate `QProgressBar` spinner per row |
+| ✅ | Add braille spinner (`⣾⣽⣻⢿⡿⣟⣯⣷`) per row via `QTimer` |
+| ✅ | Fixed-width status badge (no layout shift on state change) |
 | ✅ | Add feature search/filter bar (`QLineEdit`) |
+| ✅ | All tab — lists every feature, auto-selected when searching |
+| ✅ | Cross-category search (searches all tabs, not just current) |
 | ✅ | Logs tab with `QPlainTextEdit` (monospace, auto-scroll) |
 | ✅ | Add NVIDIA Drivers feature |
 | ✅ | Fix `.spec` Requires: removed `python3-gobject`, `gtk3`; added `python3-pyside6` |
-| ✅ | Update `.spec` summary and description |
-| 🔄 | Commit Phase 2 + Phase 3 changes |
 
 ---
 
@@ -53,7 +53,10 @@
 | Status | Task |
 |--------|------|
 | ✅ | **RPM Fusion** (Free + Non-Free) — Recommended + Gaming bundles |
-| ✅ | **Flathub remote** — dedicated feature, in Recommended bundle |
+| ✅ | **Flathub remote** — system + user remotes, dedicated feature in Recommended bundle |
+| ✅ | **Flatpak user-mode fix** — uses `PKEXEC_UID` + `runuser` so user-scope installs go to the right home directory |
+| ✅ | **Bundle abort on failure** — bundle halts and re-enables buttons instead of silently continuing |
+| ✅ | **`dnf_deps` key** — pre-install RPM deps before Flatpak (e.g. `libglvnd-gles` for BoxBuddy) |
 | ✅ | **AMD GPU Tools** — `radeontop` + `mesa-va-drivers` |
 | ✅ | **KDE Connect** — link phone to KDE desktop |
 | ✅ | **VS Code** — via Microsoft repo |
@@ -64,7 +67,10 @@
 | ✅ | **Signal, Element, Telegram** (Flatpak) — secure/alternative messaging |
 | ✅ | **Distrobox + BoxBuddy** |
 | ✅ | **JetBrains Toolbox** — manage all JetBrains IDEs from one launcher |
+| ✅ | **Discord** — switched from Flatpak to RPM (RPM Fusion Non-Free) |
 | ~~🔲~~ | ~~Timeshift~~ — **dropped**: Fedora 43 uses Btrfs; Snapper is the correct tool |
+| ~~🔲~~ | ~~Bottles~~ — **dropped**: unmaintained upstream |
+| ~~🔲~~ | ~~Boxflat~~ — **dropped**: removed from scope |
 | 💡 | Post-install reboot prompt for features that require it (NVIDIA, kernel modules) |
 | 💡 | "What's installed" summary / export page |
 | 💡 | Theme picker for Qt (follow system / force dark mode) |
@@ -76,10 +82,14 @@
 | Status | Task |
 |--------|------|
 | ✅ | `python3-pyside6` in RPM `Requires` |
-| 🔲 | Publish to COPR (Fedora community package repo) |
+| ✅ | CI: ruff lint on `src/polaris` |
+| ✅ | CI: ShellCheck on `src/polaris-helper` |
+| ✅ | CI: RPM install smoke test (verify files land at expected paths) |
+| ✅ | CI: PR comment with artifact link (fresh comment per commit) |
+| ✅ | CI: GitHub Release draft on tag push with install instructions |
+| 🔲 | Publish to COPR — eliminates GPG warning, enables `dnf upgrade` |
 | 🔲 | Automate RPM version bump via CI on tag push |
-| 🔲 | Flatpak manifest (`io.github.KernelChief.Polaris`) |
-| 💡 | Coinstall `.desktop` with MIME type for auto-detection |
+| 💡 | Flatpak manifest (`io.github.KernelChief.Polaris`) |
 
 ---
 
@@ -93,4 +103,4 @@
 
 ---
 
-**Last Updated**: 2026-04-24
+**Last Updated**: 2026-04-26

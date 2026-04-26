@@ -25,9 +25,9 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QScrollArea, QTabWidget, QLineEdit,
-    QPlainTextEdit, QFrame, QMessageBox, QProgressBar, QSizePolicy,
+    QPlainTextEdit, QFrame, QMessageBox, QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal, QObject
+from PySide6.QtCore import Qt, Signal, QObject, QTimer
 from PySide6.QtGui import QFont
 
 # ── Style constants ────────────────────────────────────────────────────────
@@ -51,6 +51,8 @@ _BTN_REMOVE = (
 _BADGE_ON   = f"background:{_GREEN}; color:white; border-radius:10px; padding:2px 10px; font-weight:bold;"
 _BADGE_OFF  = "background:palette(alternateBase); color:palette(mid); border-radius:10px; padding:2px 10px;"
 _BADGE_BUSY = f"background:{_AMBER}; color:white; border-radius:10px; padding:2px 10px;"
+
+_SPINNER_FRAMES = "⣾⣽⣻⢿⡿⣟⣯⣷"
 
 APP_STYLE = """
 QFrame#card {
@@ -305,10 +307,6 @@ FEATURES = [
      "check": {"kind": "rpm", "pkg": "input-remapper"}},
     {"id": "flatpak_protonupqt", "name": "⬆️ ProtonUp-Qt (Flatpak)", "desc": "Install and manage Proton-GE and Wine-GE versions",
      "check": {"kind": "flatpak", "appid": "net.davidotek.pupgui2"}},
-    {"id": "flatpak_bottles",    "name": "🍾 Bottles (Flatpak)", "desc": "Manage Windows apps with Wine in isolated environments",
-     "check": {"kind": "flatpak", "appid": "com.usebottles.bottles"}},
-    {"id": "flatpak_boxflat",       "name": "🎮 Boxflat (Flatpak)",        "desc": "Racing wheel / controller configuration tool",
-     "check": {"kind": "flatpak", "appid": "io.github.wiiznokes.boxflat"}},
     {"id": "flatpak_prismlauncher", "name": "⛏️ Prism Launcher (Flatpak)", "desc": "Mod-friendly Minecraft launcher",
      "check": {"kind": "flatpak", "appid": "org.prismlauncher.PrismLauncher"}},
     # ── CONTAINERS ──────────────────────────────────────────────────────────
@@ -319,6 +317,7 @@ FEATURES = [
      "install": [["install_pkg", "distrobox"]], "remove": [["remove_pkg", "distrobox"]],
      "check": {"kind": "rpm", "pkg": "distrobox"}},
     {"id": "flatpak_boxbuddy",       "name": "📦 BoxBuddy (Flatpak)",       "desc": "GUI front-end for Distrobox",
+     "dnf_deps": ["libglvnd-gles"],  # missing on fresh Fedora; not removed on uninstall (system lib)
      "check": {"kind": "flatpak", "appid": "io.github.dvlv.boxbuddyrs"}},
     {"id": "flatpak_podman_desktop", "name": "🐳 Podman Desktop (Flatpak)", "desc": "GUI for managing containers and Kubernetes",
      "check": {"kind": "flatpak", "appid": "io.podman_desktop.PodmanDesktop"}},
@@ -382,8 +381,10 @@ FEATURES = [
     },
     {"id": "flatpak_spotify",     "name": "🎵 Spotify (Flatpak)",     "desc": "Music streaming app",
      "check": {"kind": "flatpak", "appid": "com.spotify.Client"}},
-    {"id": "flatpak_discord",     "name": "💬 Discord (Flatpak)",     "desc": "Voice and chat app",
-     "check": {"kind": "flatpak", "appid": "com.discordapp.Discord"}},
+    {"id": "discord",             "name": "💬 Discord",               "desc": "Voice and chat — ⚠️ RPM Fusion Non-Free must be installed first",
+     "install": [["install_pkg", "discord"]],
+     "remove":  [["remove_pkg",  "discord"]],
+     "check": {"kind": "rpm", "pkg": "discord"}},
     {"id": "flatpak_vesktop",     "name": "💬 Vesktop (Flatpak)",     "desc": "Discord client with Vencord built in",
      "check": {"kind": "flatpak", "appid": "dev.vencord.Vesktop"}},
     {"id": "flatpak_slack",       "name": "💼 Slack (Flatpak)",       "desc": "Team chat app",
@@ -421,7 +422,7 @@ GAMING_BUNDLE = [
     "steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
     "faugus_launcher", "appimagelauncher", "heroic_appimage",
     "openrgbtool", "lact", "coolercontrol", "obs_studio", "easyeffects",
-    "flatpak_protonupqt", "flatpak_bottles",
+    "flatpak_protonupqt",
 ]
 
 TABS = [
@@ -430,14 +431,14 @@ TABS = [
     ("🔐 Security",     ["onepassword", "proton_pass", "tailscale"]),
     ("🎮 Gaming",       ["steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
                          "faugus_launcher", "appimagelauncher", "heroic_appimage", "curseforge_appimage",
-                         "input_remapper", "flatpak_protonupqt", "flatpak_bottles", "flatpak_boxflat",
+                         "input_remapper", "flatpak_protonupqt",
                          "flatpak_prismlauncher"]),
     ("📦 Containers",   ["podman", "distrobox", "flatpak_boxbuddy", "flatpak_podman_desktop"]),
     ("🛠️ Tools",        ["lact", "coolercontrol", "openrgbtool", "btrfs_assistant",
                          "kdeconnect", "piper", "snapper", "flatpak_flatseal", "flatpak_warehouse"]),
     ("🎬 Media",        ["obs_studio", "vlc", "easyeffects", "pulsemeeter_audio", "flameshot"]),
     ("💻 Apps",         ["chrome", "zoom_rpm", "vscode", "jetbrains_toolbox",
-                         "flatpak_spotify", "flatpak_discord",
+                         "flatpak_spotify", "discord",
                          "flatpak_vesktop", "flatpak_slack", "flatpak_mattermost",
                          "flatpak_libreoffice", "flatpak_gimp", "flatpak_kdenlive",
                          "flatpak_signal", "flatpak_element", "flatpak_telegram"]),
@@ -450,7 +451,7 @@ TABS = [
 
 class HelperRunner(QObject):
     text_ready = Signal(str)
-    done       = Signal()
+    done       = Signal(int)
 
     def __init__(self, cmd: list):
         super().__init__()
@@ -460,6 +461,7 @@ class HelperRunner(QObject):
         threading.Thread(target=self._run, daemon=True).start()
 
     def _run(self):
+        rc = 1
         try:
             p = subprocess.Popen(
                 self._cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -472,7 +474,7 @@ class HelperRunner(QObject):
         except Exception as e:
             self.text_ready.emit(f"ERROR: {e}\n")
         finally:
-            self.done.emit()
+            self.done.emit(rc)
 
 
 # ---------------------------------------------------------------------------
@@ -485,10 +487,15 @@ class Polaris(QMainWindow):
         self.setWindowTitle("Polaris")
         self.resize(1080, 750)
 
-        self.helper        = SYSTEM_HELPER if Path(SYSTEM_HELPER).exists() else LOCAL_HELPER
-        self.rows          = {}
-        self.bundle_running = False
-        self._runners      = set()   # prevent GC while threads run
+        self.helper          = SYSTEM_HELPER if Path(SYSTEM_HELPER).exists() else LOCAL_HELPER
+        self.rows            = {}
+        self.all_rows        = {}
+        self.bundle_running  = False
+        self._runners        = set()
+        self._spinner_frame  = 0
+        self._spinner_timer  = QTimer(self)
+        self._spinner_timer.setInterval(80)
+        self._spinner_timer.timeout.connect(self._tick_spinners)
 
         self._build_ui()
         self._append_log("Polaris ready.\n")
@@ -595,6 +602,26 @@ class Polaris(QMainWindow):
 
     def _build_tabs(self):
         tabs = QTabWidget()
+        self.tabs = tabs
+
+        # All tab — one row per feature, used for cross-category search
+        all_widget = QWidget()
+        all_layout = QVBoxLayout(all_widget)
+        all_layout.setContentsMargins(4, 6, 4, 4)
+        all_layout.setSpacing(0)
+        all_scroll = QScrollArea()
+        all_scroll.setWidgetResizable(True)
+        all_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        all_inner = QWidget()
+        all_rows_layout = QVBoxLayout(all_inner)
+        all_rows_layout.setContentsMargins(4, 4, 4, 4)
+        all_rows_layout.setSpacing(4)
+        all_rows_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        for f in FEATURES:
+            self._add_row(f, all_rows_layout, target_store=self.all_rows)
+        all_scroll.setWidget(all_inner)
+        all_layout.addWidget(all_scroll)
+        tabs.addTab(all_widget, "🔍 All")
 
         for tab_name, feature_ids in TABS:
             tab_widget = QWidget()
@@ -640,7 +667,7 @@ class Polaris(QMainWindow):
 
         return tabs
 
-    def _add_row(self, f: dict, parent_layout: QVBoxLayout):
+    def _add_row(self, f: dict, parent_layout: QVBoxLayout, target_store: dict = None):
         fid = f["id"]
 
         row = QFrame()
@@ -666,13 +693,12 @@ class Polaris(QMainWindow):
 
         status_lbl = QLabel("Checking…")
         status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        status_lbl.setMinimumWidth(110)
+        status_lbl.setFixedWidth(120)
         hl.addWidget(status_lbl)
 
-        spinner = QProgressBar()
-        spinner.setRange(0, 0)
-        spinner.setFixedSize(80, 14)
-        spinner.setTextVisible(False)
+        spinner = QLabel(_SPINNER_FRAMES[0])
+        spinner.setFixedWidth(20)
+        spinner.setAlignment(Qt.AlignmentFlag.AlignCenter)
         spinner.setVisible(False)
         hl.addWidget(spinner)
 
@@ -689,7 +715,8 @@ class Polaris(QMainWindow):
             details_btn.clicked.connect(lambda _checked, i=fid: self.show_feature_details(i))
             hl.addWidget(details_btn)
 
-        self.rows[fid] = {
+        store = target_store if target_store is not None else self.rows
+        store[fid] = {
             "feature":  f,
             "row":      row,
             "status":   status_lbl,
@@ -705,9 +732,12 @@ class Polaris(QMainWindow):
 
     def _apply_filter(self, *_):
         q = self.search.text().strip().lower()
-        for d in self.rows.values():
-            f = d["feature"]
-            d["row"].setVisible(q in (f["name"] + " " + f["desc"]).lower())
+        if q:
+            self.tabs.setCurrentIndex(0)
+        for store in (self.rows, self.all_rows):
+            for d in store.values():
+                f = d["feature"]
+                d["row"].setVisible(not q or q in (f["name"] + " " + f["desc"]).lower())
 
     # ── System state checks ────────────────────────────────────────────────
 
@@ -826,20 +856,24 @@ class Polaris(QMainWindow):
         for fid, d in self.rows.items():
             applied    = self._feature_applied(fid, repos)
             d["applied"] = applied
-            if applied:
-                d["status"].setText("✅  Installed")
-                d["status"].setStyleSheet(_BADGE_ON)
-                d["button"].setText("Remove")
+            for store in (self.rows, self.all_rows):
+                w = store.get(fid)
+                if w is None:
+                    continue
+                if applied:
+                    w["status"].setText("✅  Installed")
+                    w["status"].setStyleSheet(_BADGE_ON)
+                    w["button"].setText("Remove")
+                    if not d["busy"]:
+                        w["button"].setStyleSheet(_BTN_REMOVE)
+                else:
+                    w["status"].setText("Available")
+                    w["status"].setStyleSheet(_BADGE_OFF)
+                    w["button"].setText("Install")
+                    if not d["busy"]:
+                        w["button"].setStyleSheet(_BTN_INSTALL)
                 if not d["busy"]:
-                    d["button"].setStyleSheet(_BTN_REMOVE)
-            else:
-                d["status"].setText("Available")
-                d["status"].setStyleSheet(_BADGE_OFF)
-                d["button"].setText("Install")
-                if not d["busy"]:
-                    d["button"].setStyleSheet(_BTN_INSTALL)
-            if not d["busy"]:
-                d["button"].setEnabled(not self.bundle_running)
+                    w["button"].setEnabled(not self.bundle_running)
 
         # SELinux button state
         rm = self._selinux_mode()
@@ -940,7 +974,8 @@ class Polaris(QMainWindow):
                 scope = self._pick_flatpak_scope(d["feature"]["name"])
                 if not scope:
                     return
-                actions = [["install_flatpak_app", appid, scope]]
+                deps = [["install_pkg", p] for p in d["feature"].get("dnf_deps", [])]
+                actions = deps + [["install_flatpak_app", appid, scope]]
                 label   = "Installing…"
         else:
             key     = "remove" if d["applied"] else "install"
@@ -950,26 +985,43 @@ class Polaris(QMainWindow):
             label = "Removing…" if d["applied"] else "Installing…"
 
         self._set_busy(fid, True, label)
-        self._run_action_sequence(actions, on_done=lambda: self._done(fid))
+        self._run_action_sequence(actions, on_done=lambda: self._done(fid), on_abort=lambda: self._done(fid))
 
     # ── Busy state ─────────────────────────────────────────────────────────
 
     def _set_busy(self, fid: str, busy: bool, status: str = None):
-        d = self.rows[fid]
-        d["busy"] = busy
-        d["button"].setEnabled(not busy and not self.bundle_running)
-        if status:
-            d["status"].setText(status)
-            d["status"].setStyleSheet(_BADGE_BUSY)
-        d["spinner"].setVisible(busy)
+        self.rows[fid]["busy"] = busy
+        for store in (self.rows, self.all_rows):
+            w = store.get(fid)
+            if w is None:
+                continue
+            w["button"].setEnabled(not busy and not self.bundle_running)
+            if status:
+                w["status"].setText(status)
+                w["status"].setStyleSheet(_BADGE_BUSY)
+            w["spinner"].setVisible(busy)
+            if busy:
+                w["spinner"].setText(_SPINNER_FRAMES[0])
+        if busy:
+            self._spinner_timer.start()
+        elif not any(d["busy"] for d in self.rows.values()):
+            self._spinner_timer.stop()
 
     def _done(self, fid: str):
         self._set_busy(fid, False)
         self.refresh_states()
 
+    def _tick_spinners(self):
+        self._spinner_frame = (self._spinner_frame + 1) % len(_SPINNER_FRAMES)
+        ch = _SPINNER_FRAMES[self._spinner_frame]
+        for store in (self.rows, self.all_rows):
+            for d in store.values():
+                if d["busy"]:
+                    d["spinner"].setText(ch)
+
     # ── Action sequencing ──────────────────────────────────────────────────
 
-    def _run_action_sequence(self, actions: list, on_done=None):
+    def _run_action_sequence(self, actions: list, on_done=None, on_abort=None):
         queue = [a for a in actions if a]
 
         def step(i=0):
@@ -977,7 +1029,7 @@ class Polaris(QMainWindow):
                 if on_done:
                     on_done()
                 return
-            self._run_helper(queue[i], on_done=lambda: step(i + 1))
+            self._run_helper(queue[i], on_done=lambda: step(i + 1), on_abort=on_abort)
 
         step()
 
@@ -1007,7 +1059,8 @@ class Polaris(QMainWindow):
             fid = queue[i]
             f   = FEATURE_BY_ID[fid]
             if fid in FLATPAK_FEATURE_IDS:
-                actions = [["install_flatpak_app", f["check"]["appid"], "system"]]
+                deps = [["install_pkg", p] for p in f.get("dnf_deps", [])]
+                actions = deps + [["install_flatpak_app", f["check"]["appid"], "system"]]
             else:
                 actions = f.get("install", [])
 
@@ -1018,7 +1071,14 @@ class Polaris(QMainWindow):
                 self.refresh_states()
                 step(i + 1)
 
-            self._run_action_sequence(actions, on_done=after)
+            def on_abort_bundle():
+                self._set_busy(fid, False)
+                self._append_log(f"== Bundle aborted: failed during '{f['name']}' ==\n")
+                self.refresh_states()
+                self._toggle_buttons(True)
+                self.bundle_running = False
+
+            self._run_action_sequence(actions, on_done=after, on_abort=on_abort_bundle)
 
         step()
 
@@ -1041,9 +1101,12 @@ class Polaris(QMainWindow):
     # ── Button toggle ──────────────────────────────────────────────────────
 
     def _toggle_buttons(self, enabled: bool):
-        for d in self.rows.values():
+        for fid, d in self.rows.items():
             if not d["busy"]:
-                d["button"].setEnabled(enabled)
+                for store in (self.rows, self.all_rows):
+                    w = store.get(fid)
+                    if w:
+                        w["button"].setEnabled(enabled)
 
     # ── Helper subprocess ──────────────────────────────────────────────────
 
@@ -1053,7 +1116,7 @@ class Polaris(QMainWindow):
             self.log_view.verticalScrollBar().maximum()
         )
 
-    def _run_helper(self, args: list, on_done=None):
+    def _run_helper(self, args: list, on_done=None, on_abort=None):
         if not Path(self.helper).exists():
             self._append_log(f"ERROR: Helper not found: {self.helper}")
             if on_done:
@@ -1068,10 +1131,14 @@ class Polaris(QMainWindow):
 
         runner.text_ready.connect(self._append_log)
 
-        def on_runner_done():
+        def on_runner_done(rc: int):
             self._runners.discard(runner)
-            if on_done:
-                on_done()
+            if rc == 0:
+                if on_done:
+                    on_done()
+            else:
+                if on_abort:
+                    on_abort()
 
         runner.done.connect(on_runner_done)
         runner.start()
