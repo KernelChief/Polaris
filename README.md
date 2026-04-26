@@ -1,5 +1,5 @@
 # 🚀 Polaris
-## By friends, for friends—now for everyone.
+## By friends, for friends. Now for everyone.
 
 [![Last Commit](https://img.shields.io/github/last-commit/KernelChief/polaris)](https://github.com/KernelChief/polaris/commits)
 [![Repo Size](https://img.shields.io/github/repo-size/KernelChief/polaris)](https://github.com/KernelChief/polaris)
@@ -12,151 +12,92 @@
 
 Setting up a Linux workstation shouldn’t be a chore.
 
-This project started as a set of **Ansible playbooks** to help friends deploy a clean Fedora KDE environment — the same way, every time. As more people started asking to use it, it became clear that a command-line playbook wasn’t the right experience for everyone. So it grew into a **Qt (PySide6) desktop application** that wraps all those same actions behind a simple point-and-click interface — no terminal required.
+**Polaris** is a **PySide6 (Qt6)** desktop application that simplifies setting up a fresh Fedora KDE installation. It wraps essential post-install tasks, such as enabling repositories, installing drivers, and deploying apps, into a clean, point-and-click interface.
 
-**Why Polaris?** Polaris is the north star — always there, always reliable. It’s the first thing you find when you’re navigating somewhere new, which is exactly what this tool is for a fresh Fedora install.
-
-**Key Features:**
-
-- **One-click setup:** From gaming essentials to developer environments, RPM Fusion, NVIDIA/AMD drivers, and more.
-- **Fedora 43 KDE-native:** Optimized for Fedora 43 KDE with `dnf5`, Btrfs, Flatpak, and KDE-first tools.
-- **Safe execution:** The UI runs as your normal user. Privileged actions go through a Polkit-authorized helper — you stay in control.
-
----
-
-## 📚 Quick Navigation
-
-- [🚀 Quick Start](#-quick-start-recommended)
-- [📦 Installation Methods](#-installation-methods)
-- [🧩 Supported Platform](#-supported-platform)
-- [🧰 Included Features](#-included-features)
-- [🔐 Privilege & Security Model](#-privilege--security-model)
-- [❓ FAQ](#-faq)
-- [📜 License](#-license)
-
----
+**Why Polaris?** Polaris is the north star: always there, always reliable. It’s the first thing you find when you’re navigating a new install.
 
 ## 🚀 Quick Start (Recommended)
 
-### 1️⃣ Download the RPM
+### 1. Download the RPM
+Go to the project [releases page](https://github.com/KernelChief/polaris/releases) and download the latest `.rpm` file.
 
-Go to the project releases page:
+> **COPR Status:** We are working on a COPR repository to enable `dnf upgrade` and eliminate GPG warnings. Until then, manual RPM installation is the primary method.
 
-https://github.com/KernelChief/polaris/releases
-
-Download the RPM named like:
-
-- `polaris-X.X.X-X.fc43.noarch.rpm`
-
-Where:
-
-- `X.X.X` = app version
-- `-X` = RPM release number
-
----
-
-### 2️⃣ Install the RPM
-
-From the directory where the file was downloaded:
-
+### 2. Install the RPM
+From your terminal:
 ```bash
-sudo dnf install ./polaris-X.X.X-X.fc43.noarch.rpm
+sudo dnf install ./polaris-*.noarch.rpm
 ```
+This installs the `polaris` GUI, the Polkit-authorized helper, and the desktop launcher.
 
-This installs:
-
-- the GUI launcher (`polaris`)
-- the helper (`/usr/libexec/polaris-helper`)
-- the polkit policy
-- the desktop entry
-
----
-
-### 3️⃣ Launch the App
-
-Launch from app menu:
-
-- **Polaris**
-
-Or via terminal:
-
-```bash
-polaris
-```
-
----
-
-## 📦 Installation Methods
-
-Depending on feature, Polaris uses:
-
-- DNF package installs/removals
-- Official URL RPM installs (e.g. Chrome, Zoom)
-- Flatpak installs (user or system scope)
-- COPR enable + package install for selected tools
-- Service enable/disable via `systemctl`
-- System config actions (e.g. ZRAM profile, SELinux mode)
-
----
+### 3. Launch the App
+Find **Polaris** in your Application Menu or run `polaris` from the terminal.
 
 ## 🧩 Supported Platform
 
-- **Target:** Fedora 43 KDE Workstation
-
----
+Polaris is built specifically for **Fedora 43 KDE Workstation (Plasma 6)**. It leverages `dnf5`, Btrfs-specific tools, and KDE-native configurations to provide a seamless experience.
 
 ## 🧰 Included Features
 
-Includes install/remove workflows for:
+The app auto-detects what is already on your system and organizes tools into dedicated tabs.
 
-- **Repos:** RPM Fusion (Free + Non-Free), 1Password, Tailscale, Microsoft (VS Code), NVIDIA CUDA
-- **System:** Essential tools, ZRAM profile, SELinux mode switch, Snapper (Btrfs snapshots)
-- **Drivers:** NVIDIA open kernel modules, AMD GPU tools (`radeontop`, VA-API)
-- **Security:** 1Password, Proton Pass, Tailscale
-- **Gaming:** Steam, Lutris, Wine, GameMode, Gamescope, MangoHud, GOverlay, Faugus Launcher, Heroic, CurseForge, ProtonUp-Qt, Bottles, Prism Launcher
-- **Hardware tools:** LACT, CoolerControl, OpenRGB, Piper, Input Remapper, Btrfs Assistant
-- **Containers:** Podman, Distrobox, BoxBuddy, Podman Desktop
-- **Media & Apps:** OBS Studio, VLC, EasyEffects, Flameshot, Chrome, Zoom, VS Code
-- **Flatpak:** Spotify, Discord, Vesktop, Slack, LibreOffice, GIMP, Kdenlive, Signal, Element, Telegram, and more
+### Get Started (Recommended Bundle)
+* **RPM Fusion**: Free + Non-Free repos for codecs and proprietary drivers.
+* **Flathub Remote**: Setup for both System and User scopes.
+* **Essentials**: Git, curl, zsh, build tools, and system utilities.
+* **Monitoring**: htop, btop, nvtop, sensors.
+* **ZRAM Expansion**: Configures `zram-generator` with `zstd` compression.
 
-The in-app feature list is the source of truth — the app auto-detects what's already installed.
+### Drivers
+* **NVIDIA Drivers**: Official open kernel modules via NVIDIA CUDA repo.
+* **AMD GPU Tools**: Monitoring (`radeontop`) and VA-API hardware acceleration.
 
----
+### Security
+* **Password Managers**: 1Password (official repo), Proton Pass (RPM).
+* **VPN**: Tailscale mesh networking.
+
+### Gaming
+* **Launchers**: Steam, Lutris, Heroic (AppImage), CurseForge (AppImage), Prism Launcher (Flatpak).
+* **Tools**: Wine, GameMode, Gamescope, MangoHud, GOverlay, ProtonUp-Qt.
+* **Input**: Input Remapper for gamepads/mice.
+
+### Containers
+* **Engine**: Podman & Distrobox.
+* **GUI**: BoxBuddy (Flatpak), Podman Desktop (Flatpak).
+
+### System Tools
+* **Hardware**: LACT (AMD Control), CoolerControl, OpenRGB, Piper (Mice).
+* **Filesystem**: Btrfs Assistant & Snapper for snapshot management.
+* **Utilities**: KDE Connect, Flatseal, Warehouse.
+
+### Media & Apps
+* **Productivity**: VS Code, JetBrains Toolbox, LibreOffice.
+* **Communication**: Discord (RPM), Vesktop, Slack, Signal, Telegram, Element, Mattermost.
+* **Media**: OBS Studio, VLC, EasyEffects, Pulsemeeter, Flameshot.
+* **Graphics**: GIMP, Kdenlive.
 
 ## 🔐 Privilege & Security Model
 
-- GUI process runs as normal user
-- Privileged actions are routed through:
-  - `pkexec /usr/libexec/polaris-helper ...`
-- Polkit action:
-  - `io.github.kernelchief.polaris`
-- Authentication is requested only when needed
-
----
+* **Unprivileged UI**: The Polaris GUI runs as your normal user.
+* **Authorized Helper**: Privileged actions (like `dnf` installs or editing `/etc`) are routed through a background helper (`/usr/libexec/polaris-helper`) via **Polkit**.
+* **User Scope**: Flatpak "User" installs are run correctly as the real user via `PKEXEC_UID`, keeping your home directory permissions clean.
 
 ## ❓ FAQ
 
-**Why does it ask for admin credentials?**  
-Installing/removing packages, editing system config, and enabling services require elevated privileges.
+**Why does it ask for my password?**  
+Changing system configurations and installing software via DNF require root privileges. Polaris uses Polkit to ask for permission only when an action is triggered.
 
-**Does the app itself run as root?**  
-No. The UI is unprivileged; only helper actions are elevated through polkit.
+**Is it safe to use?**  
+Polaris is transparent. Every action it performs is a shell command you can inspect in the **Logs** tab within the app.
 
-**Can I apply items one-by-one instead of bundles?**  
-Yes. Every listed feature/app can be installed or removed individually.
-
-**What if I only want Flatpak apps?**  
-You can install only Flatpak rows; each prompts for user/system scope.
-
----
+**Why are some apps Flatpaks and others RPMs?**  
+We choose the format that offers the best experience on Fedora. For example, Discord is an RPM from RPM Fusion for better system integration, while productivity apps like LibreOffice are offered as Flatpaks for isolation and easy updates.
 
 ## 🤝 Community
 
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Contributing](CONTRIBUTING.md)
-- Maintainer/developer workflow: see [CONTRIBUTING.md](CONTRIBUTING.md)
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Contributing Guide](CONTRIBUTING.md)
 
----
 ## 📜 License
 
 This project is licensed under the **GNU GPL v3.0**. See [LICENSE](LICENSE).
