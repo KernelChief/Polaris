@@ -1022,7 +1022,14 @@ class Polaris(QMainWindow):
                 self.refresh_states()
                 step(i + 1)
 
-            self._run_action_sequence(actions, on_done=after)
+            def on_abort_bundle():
+                self._set_busy(fid, False)
+                self._append_log(f"== Bundle aborted: failed during '{f['name']}' ==\n")
+                self.refresh_states()
+                self._toggle_buttons(True)
+                self.bundle_running = False
+
+            self._run_action_sequence(actions, on_done=after, on_abort=on_abort_bundle)
 
         step()
 
