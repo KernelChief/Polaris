@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit, QFrame, QMessageBox, QSizePolicy,
 )
 from PySide6.QtCore import Qt, Signal, QObject, QTimer
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon, QPixmap
 
 # ── Style constants ────────────────────────────────────────────────────────
 
@@ -121,7 +121,20 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: trans
 """
 
 SYSTEM_HELPER = "/usr/libexec/polaris-helper"
-LOCAL_HELPER = str((Path(__file__).resolve().parent / "polaris-helper"))
+LOCAL_HELPER  = str(Path(__file__).resolve().parent / "polaris-helper")
+
+SYSTEM_ICON = "/usr/share/icons/hicolor/256x256/apps/polaris.png"
+LOCAL_ICON  = str(Path(__file__).resolve().parent.parent / "docs" / "PolarisLogo.png")
+
+
+def _load_logo(size: int) -> QPixmap:
+    path = SYSTEM_ICON if Path(SYSTEM_ICON).exists() else LOCAL_ICON
+    px = QPixmap(path)
+    if px.isNull():
+        return px
+    return px.scaled(size, size,
+                     Qt.AspectRatioMode.KeepAspectRatio,
+                     Qt.TransformationMode.SmoothTransformation)
 
 PROTON_PASS_URL     = "https://proton.me/download/pass/linux/proton-pass-1.34.2-1.x86_64.rpm"
 JETBRAINS_TOOLBOX_URL = "https://data.services.jetbrains.com/products/download?platform=linux&code=TBA"
@@ -533,9 +546,23 @@ class Polaris(QMainWindow):
         vbox.setContentsMargins(22, 18, 22, 18)
         vbox.setSpacing(10)
 
-        title = QLabel("🚀  Polaris")
-        title.setStyleSheet("color:white; font-size:19px; font-weight:bold; background:transparent;")
-        vbox.addWidget(title)
+        title_row = QHBoxLayout()
+        title_row.setSpacing(10)
+        title_row.setContentsMargins(0, 0, 0, 0)
+
+        logo_lbl = QLabel()
+        logo_lbl.setStyleSheet("background:transparent;")
+        logo_px = _load_logo(56)
+        if not logo_px.isNull():
+            logo_lbl.setPixmap(logo_px)
+        title_row.addWidget(logo_lbl)
+
+        title = QLabel("Polaris")
+        title.setStyleSheet("color:white; font-size:26px; font-weight:bold; background:transparent;")
+        title_row.addWidget(title)
+        title_row.addStretch()
+
+        vbox.addLayout(title_row)
 
         subtitle = QLabel(
             "Set up your Fedora 43 KDE workstation in a few clicks. "
@@ -1149,7 +1176,12 @@ class Polaris(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Polaris")
+    app.setDesktopFileName("polaris")
     app.setStyleSheet(APP_STYLE)
+    icon_path = SYSTEM_ICON if Path(SYSTEM_ICON).exists() else LOCAL_ICON
+    px = QPixmap(icon_path)
+    if not px.isNull():
+        app.setWindowIcon(QIcon(px))
     win = Polaris()
     win.setMinimumSize(960, 620)
     win.show()
