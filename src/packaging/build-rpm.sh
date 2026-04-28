@@ -4,6 +4,7 @@ set -euo pipefail
 
 NAME="polaris"
 VERSION="${1:-1.0}"
+VERSION="${VERSION#v}"   # strip leading 'v' — RPM Version field must not start with it
 
 # Ensure rpmbuild tree exists
 command -v rpmdev-setuptree >/dev/null 2>&1 || {
@@ -23,7 +24,9 @@ fi
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-SRC_DIR="${TMPDIR}/${NAME}-${VERSION}"
+# Directory name must match %setup -n Polaris-%{version} in the spec
+# Tarball name must match the Source0 URL basename: v%{version}.tar.gz
+SRC_DIR="${TMPDIR}/Polaris-${VERSION}"
 mkdir -p "${SRC_DIR}"
 
 # Copy repo contents into tarball staging directory
@@ -38,8 +41,8 @@ rsync -a \
   --exclude "rpmbuild" \
   "${ROOT_DIR}/" "${SRC_DIR}/"
 
-TARBALL="${HOME}/rpmbuild/SOURCES/${NAME}-${VERSION}.tar.gz"
-tar -C "${TMPDIR}" -czf "${TARBALL}" "${NAME}-${VERSION}"
+TARBALL="${HOME}/rpmbuild/SOURCES/v${VERSION}.tar.gz"
+tar -C "${TMPDIR}" -czf "${TARBALL}" "Polaris-${VERSION}"
 
 echo "Created source tarball: ${TARBALL}"
 

@@ -170,6 +170,7 @@ jobs:
           test -x /usr/bin/polaris              || { echo "FAIL: /usr/bin/polaris missing";         exit 1; }
           test -x /usr/libexec/polaris-helper   || { echo "FAIL: polaris-helper missing";           exit 1; }
           test -f /usr/share/applications/polaris.desktop || { echo "FAIL: .desktop file missing";  exit 1; }
+          test -f /usr/share/icons/hicolor/256x256/apps/polaris.png || { echo "FAIL: icon missing"; exit 1; }
           echo "Smoke test passed."
 
       - name: Upload RPM artifacts
