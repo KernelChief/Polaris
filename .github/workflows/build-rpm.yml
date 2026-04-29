@@ -262,7 +262,7 @@ jobs:
 
     steps:
       - name: Post new comment with beta RPM download link
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: beta-rpm
           recreate: true
