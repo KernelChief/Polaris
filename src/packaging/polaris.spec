@@ -38,6 +38,8 @@ install -D -m 0644 src/io.github.kernelchief.polaris.policy \
   %{buildroot}%{_datadir}/polkit-1/actions/io.github.kernelchief.polaris.policy
 install -D -m 0644 src/polaris.desktop \
   %{buildroot}%{_datadir}/applications/polaris.desktop
+install -D -m 0644 docs/PolarisLogo.png \
+  %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/polaris.png
 install -D -m 0644 LICENSE \
   %{buildroot}%{_datadir}/licenses/%{name}/LICENSE
 
@@ -46,6 +48,7 @@ install -D -m 0644 LICENSE \
 %{_libexecdir}/polaris-helper
 %{_datadir}/polkit-1/actions/io.github.kernelchief.polaris.policy
 %{_datadir}/applications/polaris.desktop
+%{_datadir}/icons/hicolor/256x256/apps/polaris.png
 %{_datadir}/licenses/%{name}/LICENSE
 
 %changelog

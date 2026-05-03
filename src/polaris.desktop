@@ -3,7 +3,7 @@
 Name=Polaris
 Comment=One-click app and driver installer for Fedora workstations
 Exec=polaris
-Icon=computer
+Icon=polaris
 Terminal=false
 Type=Application
 Categories=System;Settings;
