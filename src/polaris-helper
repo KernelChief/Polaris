@@ -306,26 +306,45 @@ remove_flathub() {
   flatpak remote-delete --system flathub 2>/dev/null || true
 }
 
-JETBRAINS_TOOLBOX_URL="https://data.services.jetbrains.com/products/download?platform=linux&code=TBA"
+PYCHARM_CE_URL="https://data.services.jetbrains.com/products/download?platform=linux&code=PCC"
 
-install_jetbrains_toolbox() {
+install_pycharm_ce() {
   local tmpdir
   tmpdir="$(mktemp -d)"
   trap 'rm -rf "${tmpdir}"' EXIT
 
-  log "Downloading JetBrains Toolbox..."
-  curl -fsSL -o "${tmpdir}/toolbox.tar.gz" "${JETBRAINS_TOOLBOX_URL}"
-  tar -xzf "${tmpdir}/toolbox.tar.gz" -C "${tmpdir}"
+  log "Downloading PyCharm Community Edition..."
+  curl -fsSL -o "${tmpdir}/pycharm-ce.tar.gz" "${PYCHARM_CE_URL}"
+  tar -xzf "${tmpdir}/pycharm-ce.tar.gz" -C "${tmpdir}"
 
-  local binary
-  binary="$(find "${tmpdir}" -name "jetbrains-toolbox" -type f | head -1)"
-  [[ -n "${binary}" ]] || { echo "ERROR: jetbrains-toolbox binary not found in archive" >&2; exit 2; }
+  local extracted
+  extracted="$(find "${tmpdir}" -maxdepth 1 -type d -name "pycharm-*" | head -1)"
+  [[ -n "${extracted}" ]] || { echo "ERROR: PyCharm directory not found in archive" >&2; exit 2; }
 
-  install -D -m 0755 "${binary}" /usr/local/bin/jetbrains-toolbox
+  rm -rf /opt/pycharm-ce
+  mv "${extracted}" /opt/pycharm-ce
+  ln -sf /opt/pycharm-ce/bin/pycharm /usr/local/bin/pycharm
+
+  install -D -m 0644 /opt/pycharm-ce/bin/pycharm.png /usr/share/pixmaps/pycharm-ce.png 2>/dev/null || true
+  cat >/usr/share/applications/pycharm-ce.desktop <<'DESKTOP'
+[Desktop Entry]
+Name=PyCharm Community Edition
+Comment=Python IDE for Professional Developers
+Exec=/opt/pycharm-ce/bin/pycharm
+Icon=pycharm-ce
+Terminal=false
+Type=Application
+Categories=Development;IDE;
+StartupWMClass=jetbrains-pycharm-ce
+DESKTOP
+  chmod 0644 /usr/share/applications/pycharm-ce.desktop
 }
 
-remove_jetbrains_toolbox() {
-  rm -f /usr/local/bin/jetbrains-toolbox
+remove_pycharm_ce() {
+  rm -f /usr/local/bin/pycharm
+  rm -rf /opt/pycharm-ce
+  rm -f /usr/share/applications/pycharm-ce.desktop
+  rm -f /usr/share/pixmaps/pycharm-ce.png
 }
 
 install_flatpak_app() {
@@ -400,8 +419,8 @@ case "${action}" in
   remove_appimage_glob) remove_appimage_glob "${2:-}" ;;
   setup_flathub) setup_flathub ;;
   remove_flathub) remove_flathub ;;
-  install_jetbrains_toolbox) install_jetbrains_toolbox ;;
-  remove_jetbrains_toolbox) remove_jetbrains_toolbox ;;
+  install_pycharm_ce) install_pycharm_ce ;;
+  remove_pycharm_ce) remove_pycharm_ce ;;
   install_flatpak_app) install_flatpak_app "${2:-}" "${3:-system}" ;;
   remove_flatpak_app) remove_flatpak_app "${2:-}" ;;
   *)

@@ -56,13 +56,13 @@ jobs:
           additional_files: src/polaris-helper
 
   build:
-    name: Build (Fedora ${{ matrix.fedora }} KDE)
+    name: Build (Fedora ${{ matrix.fedora }})
     runs-on: ubuntu-latest
     needs: [lint, shellcheck]
     if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation'))
     strategy:
       matrix:
-        fedora: [43]
+        fedora: [43, 44]
 
     container:
       image: fedora:${{ matrix.fedora }}
@@ -176,7 +176,7 @@ jobs:
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: rpm-f${{ matrix.fedora }}-kde-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
+          name: rpm-f${{ matrix.fedora }}-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
           path: dist/*.rpm
 
   release:
@@ -211,11 +211,12 @@ jobs:
             echo "do_release=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download Fedora 43 KDE artifacts
+      - name: Download RPM artifacts
         if: steps.resolve_tag.outputs.do_release == 'true'
         uses: actions/download-artifact@v4
         with:
-          name: rpm-f43-kde-release
+          pattern: rpm-f*-release
+          merge-multiple: true
           path: dist
 
       - name: List files (debug)
@@ -253,7 +254,8 @@ jobs:
             > the package is not yet signed with a GPG key.
 
             ### Assets
-            - Fedora 43 KDE RPM
+            - Fedora 43 RPM
+            - Fedora 44 RPM
 
   pr-beta-comment:
     name: Comment beta RPM location on PR
@@ -278,4 +280,4 @@ jobs:
             sudo dnf install ./polaris-*.noarch.rpm
             ```
 
-            Artifact name: `rpm-f43-kde-pr${{ github.event.pull_request.number }}`
+            Artifact names: `rpm-f43-pr${{ github.event.pull_request.number }}`, `rpm-f44-pr${{ github.event.pull_request.number }}`
