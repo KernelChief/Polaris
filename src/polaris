@@ -727,7 +727,6 @@ class Polaris(QMainWindow):
         name_lbl = QLabel(f["name"])
         name_lbl.setStyleSheet("font-weight: bold;")
         desc_lbl = QLabel(f["desc"])
-        desc_lbl.setStyleSheet("color: palette(placeholderText);")
         desc_lbl.setWordWrap(True)
         info_vbox.addWidget(name_lbl)
         info_vbox.addWidget(desc_lbl)
