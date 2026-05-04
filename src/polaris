@@ -137,7 +137,7 @@ def _load_logo(size: int) -> QPixmap:
                      Qt.TransformationMode.SmoothTransformation)
 
 PROTON_PASS_URL     = "https://proton.me/download/pass/linux/proton-pass-1.34.2-1.x86_64.rpm"
-JETBRAINS_TOOLBOX_URL = "https://data.services.jetbrains.com/products/download?platform=linux&code=TBA"
+PYCHARM_CE_URL = "https://data.services.jetbrains.com/products/download?platform=linux&code=PCC"
 APPIMAGELAUNCHER_URL = "https://github.com/TheAssassin/AppImageLauncher/releases/download/v3.0.0-beta-3/appimagelauncher_3.0.0-beta-2-gha287.96cb937_x86_64.rpm"
 HEROIC_URL          = "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.19.1/Heroic-2.19.1-linux-x86_64.AppImage"
 CURSEFORGE_URL      = "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.AppImage"
@@ -295,6 +295,11 @@ FEATURES = [
         "install": [["install_url_rpm", APPIMAGELAUNCHER_URL]],
         "remove":  [["remove_pkg", "appimagelauncher"]],
         "check":   {"kind": "rpm", "pkg": "appimagelauncher"},
+        "post_install_note": (
+            "AppImageLauncher is installed.\n\n"
+            "⚠️  A reboot (or log out and back in) is required for AppImages to be "
+            "integrated into your application menu."
+        ),
     },
     {
         "id": "heroic_appimage",
@@ -304,6 +309,11 @@ FEATURES = [
                     ["install_appimage", HEROIC_URL, "Heroic-2.19.1-linux-x86_64.AppImage"]],
         "remove":  [["remove_appimage_glob", "*Heroic*.AppImage"]],
         "check":   {"kind": "appimage_glob", "pattern": "*Heroic*.AppImage"},
+        "post_install_note": (
+            "Heroic Games Launcher has been downloaded.\n\n"
+            "⚠️  A reboot (or log out and back in) is required for it to appear "
+            "in your application menu."
+        ),
     },
     {
         "id": "curseforge_appimage",
@@ -314,6 +324,11 @@ FEATURES = [
         "remove":  [["remove_appimage_glob", "*curse*forge*.AppImage"]],
         "check":   {"kind": "appimage_glob_any",
                     "patterns": ["*curse*forge*.AppImage", "*Curse*Forge*.AppImage"]},
+        "post_install_note": (
+            "CurseForge has been downloaded.\n\n"
+            "⚠️  A reboot (or log out and back in) is required for it to appear "
+            "in your application menu."
+        ),
     },
     {"id": "input_remapper", "name": "🕹️ Input Remapper", "desc": "Remap keyboard, mouse and gamepad inputs",
      "install": [["install_pkg", "input-remapper"]], "remove": [["remove_pkg", "input-remapper"]],
@@ -347,9 +362,7 @@ FEATURES = [
     {"id": "btrfs_assistant", "name": "🗂️ Btrfs Assistant", "desc": "GUI tools for Btrfs snapshot management",
      "install": [["install_pkg", "btrfs-assistant"]], "remove": [["remove_pkg", "btrfs-assistant"]],
      "check": {"kind": "rpm", "pkg": "btrfs-assistant"}},
-    {"id": "kdeconnect", "name": "📱 KDE Connect",  "desc": "Link your Android or iOS phone to your KDE desktop",
-     "install": [["install_pkg", "kdeconnect"]], "remove": [["remove_pkg", "kdeconnect"]],
-     "check": {"kind": "rpm", "pkg": "kdeconnect"}},
+
     {"id": "piper",      "name": "🖱️ Piper",        "desc": "GUI for configuring gaming mice via libratbag",
      "install": [["install_pkg", "piper"]], "remove": [["remove_pkg", "piper"]],
      "check": {"kind": "rpm", "pkg": "piper"}},
@@ -372,7 +385,7 @@ FEATURES = [
      "check": {"kind": "rpm", "pkg": "easyeffects"}},
     {"id": "pulsemeeter_audio", "name": "🔊 Pulsemeeter", "desc": "Advanced audio routing controls",
      "install": [["install_pulsemeeter"]], "remove": [["remove_pulsemeeter"]],
-     "check": {"kind": "rpm", "pkg": "pulsemeeter"}},
+     "check": {"kind": "python_module", "module": "pulsemeeter"}},
     {"id": "flameshot",       "name": "📸 Flameshot",    "desc": "Screenshot tool with annotation support",
      "install": [["install_pkg", "flameshot"]], "remove": [["remove_pkg", "flameshot"]],
      "check": {"kind": "rpm", "pkg": "flameshot"}},
@@ -404,8 +417,10 @@ FEATURES = [
      "check": {"kind": "flatpak", "appid": "com.slack.Slack"}},
     {"id": "flatpak_mattermost",  "name": "🗨️ Mattermost (Flatpak)",  "desc": "Self-hosted team chat",
      "check": {"kind": "flatpak", "appid": "com.mattermost.Desktop"}},
-    {"id": "flatpak_libreoffice", "name": "📄 LibreOffice (Flatpak)", "desc": "Full office suite",
+    {"id": "flatpak_libreoffice",  "name": "📄 LibreOffice (Flatpak)",  "desc": "Full office suite",
      "check": {"kind": "flatpak", "appid": "org.libreoffice.LibreOffice"}},
+    {"id": "flatpak_openoffice",   "name": "📄 OpenOffice (Flatpak)",   "desc": "Apache OpenOffice — classic open-source office suite",
+     "check": {"kind": "flatpak", "appid": "org.openoffice.OpenOffice"}},
     {"id": "flatpak_gimp",        "name": "🖌️ GIMP (Flatpak)",        "desc": "GNU Image Manipulation Program",
      "check": {"kind": "flatpak", "appid": "org.gimp.GIMP"}},
     {"id": "flatpak_kdenlive",    "name": "🎬 Kdenlive (Flatpak)",    "desc": "Open-source video editor",
@@ -413,16 +428,16 @@ FEATURES = [
     {"id": "flatpak_signal",      "name": "🔒 Signal (Flatpak)",      "desc": "Secure end-to-end encrypted messaging",
      "check": {"kind": "flatpak", "appid": "org.signal.Signal"}},
     {"id": "flatpak_element",     "name": "💬 Element (Flatpak)",     "desc": "Matrix / Element chat client (self-hostable)",
-     "check": {"kind": "flatpak", "appid": "io.element.Element"}},
+     "check": {"kind": "flatpak", "appid": "im.riot.Riot"}},
     {"id": "flatpak_telegram",    "name": "✈️ Telegram (Flatpak)",    "desc": "Telegram desktop messaging app",
      "check": {"kind": "flatpak", "appid": "org.telegram.desktop"}},
     {
-        "id": "jetbrains_toolbox",
-        "name": "🧰 JetBrains Toolbox",
-        "desc": "Manage all JetBrains IDEs (PyCharm, IntelliJ, Rider…) from one launcher",
-        "install": [["install_jetbrains_toolbox"]],
-        "remove":  [["remove_jetbrains_toolbox"]],
-        "check":   {"kind": "file", "path": "/usr/local/bin/jetbrains-toolbox"},
+        "id": "pycharm_ce",
+        "name": "🐍 PyCharm Community Edition",
+        "desc": "Free Python IDE by JetBrains — full-featured, no subscription required",
+        "install": [["install_pycharm_ce"]],
+        "remove":  [["remove_pycharm_ce"]],
+        "check":   {"kind": "file", "path": "/usr/local/bin/pycharm"},
     },
 ]
 
@@ -448,12 +463,12 @@ TABS = [
                          "flatpak_prismlauncher"]),
     ("📦 Containers",   ["podman", "distrobox", "flatpak_boxbuddy", "flatpak_podman_desktop"]),
     ("🛠️ Tools",        ["lact", "coolercontrol", "openrgbtool", "btrfs_assistant",
-                         "kdeconnect", "piper", "snapper", "flatpak_flatseal", "flatpak_warehouse"]),
+                         "piper", "snapper", "flatpak_flatseal", "flatpak_warehouse"]),
     ("🎬 Media",        ["obs_studio", "vlc", "easyeffects", "pulsemeeter_audio", "flameshot"]),
-    ("💻 Apps",         ["chrome", "zoom_rpm", "vscode", "jetbrains_toolbox",
+    ("💻 Apps",         ["chrome", "zoom_rpm", "vscode", "pycharm_ce",
                          "flatpak_spotify", "discord",
                          "flatpak_vesktop", "flatpak_slack", "flatpak_mattermost",
-                         "flatpak_libreoffice", "flatpak_gimp", "flatpak_kdenlive",
+                         "flatpak_libreoffice", "flatpak_openoffice", "flatpak_gimp", "flatpak_kdenlive",
                          "flatpak_signal", "flatpak_element", "flatpak_telegram"]),
 ]
 
@@ -565,7 +580,7 @@ class Polaris(QMainWindow):
         vbox.addLayout(title_row)
 
         subtitle = QLabel(
-            "Set up your Fedora 43 KDE workstation in a few clicks. "
+            "Set up your Fedora 43 / 44 workstation in a few clicks. "
             "New here? Hit <b>Recommended Setup</b> — it handles the essentials automatically. "
             "Then explore the tabs for more."
         )
@@ -643,9 +658,9 @@ class Polaris(QMainWindow):
         all_rows_layout = QVBoxLayout(all_inner)
         all_rows_layout.setContentsMargins(4, 4, 4, 4)
         all_rows_layout.setSpacing(4)
-        all_rows_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         for f in FEATURES:
             self._add_row(f, all_rows_layout, target_store=self.all_rows)
+        all_rows_layout.addStretch(1)
         all_scroll.setWidget(all_inner)
         all_layout.addWidget(all_scroll)
         tabs.addTab(all_widget, "🔍 All")
@@ -664,12 +679,12 @@ class Polaris(QMainWindow):
             rows_layout = QVBoxLayout(scroll_inner)
             rows_layout.setContentsMargins(4, 4, 4, 4)
             rows_layout.setSpacing(4)
-            rows_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
             for fid in feature_ids:
                 f = FEATURE_BY_ID.get(fid)
                 if f:
                     self._add_row(f, rows_layout)
+            rows_layout.addStretch(1)
 
             scroll.setWidget(scroll_inner)
             tab_layout.addWidget(scroll)
@@ -712,7 +727,7 @@ class Polaris(QMainWindow):
         name_lbl = QLabel(f["name"])
         name_lbl.setStyleSheet("font-weight: bold;")
         desc_lbl = QLabel(f["desc"])
-        desc_lbl.setStyleSheet("color: palette(mid);")
+        desc_lbl.setStyleSheet("color: palette(placeholderText);")
         desc_lbl.setWordWrap(True)
         info_vbox.addWidget(name_lbl)
         info_vbox.addWidget(desc_lbl)
@@ -874,6 +889,11 @@ class Polaris(QMainWindow):
                 return False
         if kind == "file":
             return Path(check["path"]).exists()
+        if kind == "python_module":
+            return subprocess.run(
+                [sys.executable, "-c", f"import {check['module']}"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            ).returncode == 0
         return False
 
     # ── State refresh ──────────────────────────────────────────────────────
@@ -1012,7 +1032,20 @@ class Polaris(QMainWindow):
             label = "Removing…" if d["applied"] else "Installing…"
 
         self._set_busy(fid, True, label)
-        self._run_action_sequence(actions, on_done=lambda: self._done(fid), on_abort=lambda: self._done(fid))
+
+        is_install = not d["applied"]
+        note = d["feature"].get("post_install_note") if is_install else None
+
+        def on_install_done():
+            self._done(fid)
+            if note:
+                QMessageBox.information(self, "Reboot Required", note)
+
+        self._run_action_sequence(
+            actions,
+            on_done=on_install_done if note else lambda: self._done(fid),
+            on_abort=lambda: self._done(fid),
+        )
 
     # ── Busy state ─────────────────────────────────────────────────────────
 

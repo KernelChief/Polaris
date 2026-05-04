@@ -4,7 +4,7 @@ Name:           polaris
 %{!?app_version:%global app_version 1.0.2}
 Version:        %{app_version}
 Release:        1%{?dist}
-Summary:        One-click workstation setup assistant for Fedora KDE
+Summary:        One-click workstation setup assistant for Fedora
 License:        GPL-3.0-or-later
 URL:            https://github.com/KernelChief/polaris
 BuildArch:      noarch
@@ -21,7 +21,7 @@ Requires:       dnf5
 Source0:        https://github.com/KernelChief/Polaris/archive/refs/tags/v%{version}.tar.gz
 
 %description
-Polaris is a Qt-based graphical utility for Fedora 43 KDE workstations.
+Polaris is a Qt-based graphical utility for Fedora workstations (43 and 44).
 It provides one-click install/remove actions for common workstation packages,
 drivers, and Flatpak apps using a PolicyKit-protected helper.
 
