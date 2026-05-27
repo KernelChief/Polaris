@@ -251,6 +251,8 @@ FEATURES = [
         "remove":  [["remove_pkg", "proton-pass"]],
         "check":   {"kind": "rpm", "pkg": "proton-pass"},
     },
+    {"id": "flatpak_bitwarden", "name": "🔐 Bitwarden (Flatpak)", "desc": "Free, open-source password manager",
+     "check": {"kind": "flatpak", "appid": "com.bitwarden.desktop"}},
     {
         "id": "tailscale",
         "name": "🌐 Tailscale",
@@ -333,6 +335,8 @@ FEATURES = [
     {"id": "input_remapper", "name": "🕹️ Input Remapper", "desc": "Remap keyboard, mouse and gamepad inputs",
      "install": [["install_pkg", "input-remapper"]], "remove": [["remove_pkg", "input-remapper"]],
      "check": {"kind": "rpm", "pkg": "input-remapper"}},
+    {"id": "flatpak_bottles",    "name": "🍾 Bottles (Flatpak)",    "desc": "Run Windows apps and games in isolated Wine environments",
+     "check": {"kind": "flatpak", "appid": "com.usebottles.bottles"}},
     {"id": "flatpak_protonupqt", "name": "⬆️ ProtonUp-Qt (Flatpak)", "desc": "Install and manage Proton-GE and Wine-GE versions",
      "check": {"kind": "flatpak", "appid": "net.davidotek.pupgui2"}},
     {"id": "flatpak_prismlauncher", "name": "⛏️ Prism Launcher (Flatpak)", "desc": "Mod-friendly Minecraft launcher",
@@ -374,6 +378,8 @@ FEATURES = [
     {"id": "flatpak_warehouse", "name": "🏪 Warehouse (Flatpak)", "desc": "Browse and manage all installed Flatpaks",
      "check": {"kind": "flatpak", "appid": "io.github.flattool.Warehouse"}},
     # ── MEDIA & UTILITIES ───────────────────────────────────────────────────
+    {"id": "flatpak_handbrake",  "name": "🎞️ HandBrake (Flatpak)",  "desc": "Video transcoder — convert and compress video files",
+     "check": {"kind": "flatpak", "appid": "fr.handbrake.ghb"}},
     {"id": "obs_studio",      "name": "📺 OBS Studio",  "desc": "Recording and streaming studio",
      "install": [["install_pkg", "obs-studio"]], "remove": [["remove_pkg", "obs-studio"]],
      "check": {"kind": "rpm", "pkg": "obs-studio"}},
@@ -405,6 +411,10 @@ FEATURES = [
         "check":   {"kind": "repo_and_pkg", "repo_prefix": "code",
                     "repo_file": "/etc/yum.repos.d/vscode.repo", "pkg": "code"},
     },
+    {"id": "flatpak_thunderbird",  "name": "🦅 Thunderbird (Flatpak)",  "desc": "Mozilla email and calendar client",
+     "check": {"kind": "flatpak", "appid": "org.mozilla.Thunderbird"}},
+    {"id": "flatpak_localsend",   "name": "📡 LocalSend (Flatpak)",   "desc": "Open-source AirDrop alternative for local network file sharing",
+     "check": {"kind": "flatpak", "appid": "org.localsend.localsend_app"}},
     {"id": "flatpak_spotify",     "name": "🎵 Spotify (Flatpak)",     "desc": "Music streaming app",
      "check": {"kind": "flatpak", "appid": "com.spotify.Client"}},
     {"id": "discord",             "name": "💬 Discord",               "desc": "Voice and chat — ⚠️ RPM Fusion Non-Free must be installed first",
@@ -419,7 +429,7 @@ FEATURES = [
      "check": {"kind": "flatpak", "appid": "com.mattermost.Desktop"}},
     {"id": "flatpak_libreoffice",  "name": "📄 LibreOffice (Flatpak)",  "desc": "Full office suite",
      "check": {"kind": "flatpak", "appid": "org.libreoffice.LibreOffice"}},
-    {"id": "flatpak_openoffice",   "name": "📄 OpenOffice (Flatpak)",   "desc": "Apache OpenOffice — classic open-source office suite",
+    {"id": "flatpak_openoffice", "name": "📄 Apache OpenOffice (Flatpak)", "desc": "Classic office suite — Writer, Calc, Impress and more",
      "check": {"kind": "flatpak", "appid": "org.openoffice.OpenOffice"}},
     {"id": "flatpak_gimp",        "name": "🖌️ GIMP (Flatpak)",        "desc": "GNU Image Manipulation Program",
      "check": {"kind": "flatpak", "appid": "org.gimp.GIMP"}},
@@ -456,17 +466,17 @@ GAMING_BUNDLE = [
 TABS = [
     ("🚀 Get Started",  ["rpmfusion", "flathub", "essential", "monitoring", "zram_profile"]),
     ("🔌 Drivers",      ["nvidia_drivers", "amd_tools"]),
-    ("🔐 Security",     ["onepassword", "proton_pass", "tailscale"]),
+    ("🔐 Security",     ["onepassword", "proton_pass", "flatpak_bitwarden", "tailscale"]),
     ("🎮 Gaming",       ["steam", "lutris", "wine", "gamemode", "gamescope", "mangohud", "goverlay",
                          "faugus_launcher", "appimagelauncher", "heroic_appimage", "curseforge_appimage",
-                         "input_remapper", "flatpak_protonupqt",
+                         "input_remapper", "flatpak_bottles", "flatpak_protonupqt",
                          "flatpak_prismlauncher"]),
     ("📦 Containers",   ["podman", "distrobox", "flatpak_boxbuddy", "flatpak_podman_desktop"]),
     ("🛠️ Tools",        ["lact", "coolercontrol", "openrgbtool", "btrfs_assistant",
-                         "piper", "snapper", "flatpak_flatseal", "flatpak_warehouse"]),
-    ("🎬 Media",        ["obs_studio", "vlc", "easyeffects", "pulsemeeter_audio", "flameshot"]),
-    ("💻 Apps",         ["chrome", "zoom_rpm", "vscode", "pycharm_ce",
-                         "flatpak_spotify", "discord",
+                         "kdeconnect", "piper", "snapper", "flatpak_flatseal", "flatpak_warehouse"]),
+    ("🎬 Media",        ["obs_studio", "vlc", "flatpak_handbrake", "easyeffects", "pulsemeeter_audio", "flameshot"]),
+    ("💻 Apps",         ["chrome", "zoom_rpm", "vscode", "jetbrains_toolbox",
+                         "flatpak_thunderbird", "flatpak_localsend", "flatpak_spotify", "discord",
                          "flatpak_vesktop", "flatpak_slack", "flatpak_mattermost",
                          "flatpak_libreoffice", "flatpak_openoffice", "flatpak_gimp", "flatpak_kdenlive",
                          "flatpak_signal", "flatpak_element", "flatpak_telegram"]),
@@ -581,6 +591,7 @@ class Polaris(QMainWindow):
 
         subtitle = QLabel(
             "Set up your Fedora 43 / 44 workstation in a few clicks. "
+            "Primarily tested on KDE Plasma — most features work on GNOME and other spins too. "
             "New here? Hit <b>Recommended Setup</b> — it handles the essentials automatically. "
             "Then explore the tabs for more."
         )

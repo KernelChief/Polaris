@@ -62,12 +62,12 @@ The app auto-detects what is already on your system and organizes tools into ded
 * **AMD GPU Tools**: Monitoring (`radeontop`) and VA-API hardware acceleration.
 
 ### Security
-* **Password Managers**: 1Password (official repo), Proton Pass (RPM).
+* **Password Managers**: 1Password (official repo), Proton Pass (RPM), Bitwarden (Flatpak).
 * **VPN**: Tailscale mesh networking.
 
 ### Gaming
-* **Launchers**: Steam, Lutris, Heroic (AppImage), CurseForge (AppImage), Prism Launcher (Flatpak).
-* **Tools**: Wine, GameMode, Gamescope, MangoHud, GOverlay, ProtonUp-Qt.
+* **Launchers**: Steam, Lutris, Heroic (AppImage), CurseForge (AppImage), Faugus Launcher, Prism Launcher (Flatpak).
+* **Tools**: Wine, Bottles (Flatpak), GameMode, Gamescope, MangoHud, GOverlay, ProtonUp-Qt.
 * **Input**: Input Remapper for gamepads/mice.
 
 ### Containers
@@ -80,10 +80,11 @@ The app auto-detects what is already on your system and organizes tools into ded
 * **Utilities**: Flatseal, Warehouse.
 
 ### Media & Apps
-* **Productivity**: VS Code, PyCharm Community Edition, LibreOffice, OpenOffice.
-* **Communication**: Discord (RPM), Vesktop, Slack, Signal, Telegram, Element, Mattermost.
-* **Media**: OBS Studio, VLC, EasyEffects, Pulsemeeter, Flameshot.
-* **Graphics**: GIMP, Kdenlive.
+* **Productivity**: VS Code, JetBrains Toolbox, LibreOffice (Flatpak), Apache OpenOffice (Flatpak).
+* **Communication**: Thunderbird (Flatpak), Discord (RPM), Vesktop, Slack, Signal, Telegram, Element, Mattermost.
+* **Utilities**: Zoom, Google Chrome, LocalSend (Flatpak).
+* **Media**: OBS Studio, VLC, HandBrake (Flatpak), EasyEffects, Pulsemeeter, Flameshot.
+* **Graphics**: GIMP (Flatpak), Kdenlive (Flatpak).
 
 ## 🔐 Privilege & Security Model
 
