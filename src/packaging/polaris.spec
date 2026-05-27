@@ -2,8 +2,9 @@
 
 Name:           polaris
 %{!?app_version:%global app_version 1.0.3}
+%{!?app_release:%global app_release 1}
 Version:        %{app_version}
-Release:        1%{?dist}
+Release:        %{app_release}%{?dist}
 Summary:        One-click workstation setup assistant for Fedora
 License:        GPL-3.0-or-later
 URL:            https://github.com/KernelChief/polaris
