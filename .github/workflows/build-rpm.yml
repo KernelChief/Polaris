@@ -159,8 +159,9 @@ jobs:
           chmod +x src/packaging/build-rpm.sh
           ./src/packaging/build-rpm.sh "$VERSION"
 
-          # Collect RPMs into dist/
-          find "$HOME/rpmbuild/RPMS" -type f -name "*.rpm" -exec cp -v {} "$DISTDIR/" \;
+          # Collect RPMs and SRPM into dist/
+          find "$HOME/rpmbuild/RPMS"  -type f -name "*.rpm"     -exec cp -v {} "$DISTDIR/" \;
+          find "$HOME/rpmbuild/SRPMS" -type f -name "*.src.rpm" -exec cp -v {} "$DISTDIR/" \;
 
       - name: Smoke test — install RPM and verify files
         env:
@@ -177,7 +178,41 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: rpm-f${{ matrix.fedora }}-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
-          path: dist/*.rpm
+          path: dist/*.noarch.rpm
+
+      - name: Upload SRPM artifact (f44 only — same source for all targets)
+        if: matrix.fedora == 44
+        uses: actions/upload-artifact@v7
+        with:
+          name: srpm-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
+          path: dist/*.src.rpm
+
+  copr-beta:
+    name: Submit to COPR Beta
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && !contains(github.event.pull_request.labels.*.name, 'documentation') && secrets.COPR_CONFIG != ''
+
+    steps:
+      - name: Download SRPM
+        uses: actions/download-artifact@v4
+        with:
+          name: srpm-pr${{ github.event.pull_request.number }}
+          path: dist
+
+      - name: Install copr-cli
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-pip
+          pip install copr-cli
+
+      - name: Write COPR config
+        run: |
+          mkdir -p ~/.config
+          printf '%s' "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
+
+      - name: Submit SRPM to Polaris-beta COPR
+        run: copr-cli build tristantheroux/Polaris-beta dist/*.src.rpm
 
   release:
     name: Release
@@ -259,9 +294,9 @@ jobs:
 
   pr-beta-comment:
     name: Comment beta RPM location on PR
-    needs: build
+    needs: [build, copr-beta]
+    if: always() && github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'documentation')
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'documentation')
 
     steps:
       - name: Post new comment with beta RPM download link
@@ -272,12 +307,18 @@ jobs:
           message: |
             ✅ Beta RPM built for commit `${{ github.sha }}`.
 
-            Download from this run's artifacts:
+            **Download artifacts from this run:**
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
 
-            Install with:
+            Artifact names: `rpm-f43-pr${{ github.event.pull_request.number }}`, `rpm-f44-pr${{ github.event.pull_request.number }}`
+
+            **Install locally:**
             ```bash
             sudo dnf install ./polaris-*.noarch.rpm
             ```
 
-            Artifact names: `rpm-f43-pr${{ github.event.pull_request.number }}`, `rpm-f44-pr${{ github.event.pull_request.number }}`
+            **Or via COPR beta** (if `COPR_CONFIG` secret is set):
+            ```bash
+            sudo dnf copr enable tristantheroux/Polaris-beta
+            sudo dnf install polaris
+            ```
