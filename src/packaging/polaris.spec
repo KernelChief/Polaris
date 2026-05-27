@@ -19,7 +19,7 @@ Requires:       systemd
 Requires:       dnf5
 
 # Use the GitHub-generated tarball URL
-Source0:        https://github.com/KernelChief/Polaris/archive/refs/tags/v%{version}.tar.gz
+Source0:        https://github.com/KernelChief/Polaris/archive/v%{version}.tar.gz#/Polaris-%{version}.tar.gz
 
 %description
 Polaris is a Qt-based graphical utility for Fedora workstations (43 and 44).

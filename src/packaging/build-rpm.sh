@@ -64,7 +64,7 @@ rsync -a \
   --exclude "rpmbuild" \
   "${ROOT_DIR}/" "${SRC_DIR}/"
 
-TARBALL="${HOME}/rpmbuild/SOURCES/v${RPM_VERSION}.tar.gz"
+TARBALL="${HOME}/rpmbuild/SOURCES/Polaris-${RPM_VERSION}.tar.gz"
 tar -C "${TMPDIR}" -czf "${TARBALL}" "Polaris-${RPM_VERSION}"
 
 echo "Created source tarball: ${TARBALL}"
