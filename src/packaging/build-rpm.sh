@@ -70,16 +70,20 @@ tar -C "${TMPDIR}" -czf "${TARBALL}" "Polaris-${RPM_VERSION}"
 echo "Created source tarball: ${TARBALL}"
 echo "Building ${NAME} version ${VERSION} using spec: ${SPEC}"
 
-RPMBUILD_ARGS=(
-  -ba
-  --define "app_version ${RPM_VERSION}"
-)
-
+RPM_RELEASE="1"
 if [[ -n "${RPM_PRERELEASE}" ]]; then
-  RPMBUILD_ARGS+=(--define "app_release 0.${RPM_PRERELEASE}.1")
+  RPM_RELEASE="0.${RPM_PRERELEASE}.1"
 fi
 
-rpmbuild "${RPMBUILD_ARGS[@]}" "${SPEC}"
+# Bake version/release into a temp copy of the spec so the SRPM is
+# self-contained: COPR rebuilds from the SRPM without --define flags.
+BUILD_SPEC="${TMPDIR}/polaris.spec"
+sed \
+  -e "s|%{!?app_version:%global app_version [^}]*}|%global app_version ${RPM_VERSION}|" \
+  -e "s|%{!?app_release:%global app_release [^}]*}|%global app_release ${RPM_RELEASE}|" \
+  "${SPEC}" > "${BUILD_SPEC}"
+
+rpmbuild -ba "${BUILD_SPEC}"
 
 echo "Done."
 echo "RPMs are in: ${HOME}/rpmbuild/RPMS/"
