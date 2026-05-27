@@ -211,8 +211,8 @@ jobs:
           mkdir -p ~/.config
           printf '%s' "${{ secrets.COPR_CONFIG }}" > ~/.config/copr
 
-      - name: Submit SRPM to Polaris-beta COPR
-        run: copr-cli build tristantheroux/Polaris-beta dist/*.src.rpm
+      - name: Submit SRPM to Polaris-Testing COPR
+        run: copr-cli build tristantheroux/Polaris-Testing dist/*.src.rpm
 
   release:
     name: Release
@@ -317,8 +317,8 @@ jobs:
             sudo dnf install ./polaris-*.noarch.rpm
             ```
 
-            **Or via COPR beta** (if `COPR_CONFIG` secret is set):
+            **Or via COPR Testing** (if `COPR_CONFIG` secret is set):
             ```bash
-            sudo dnf copr enable tristantheroux/Polaris-beta
+            sudo dnf copr enable tristantheroux/Polaris-Testing
             sudo dnf install polaris
             ```
