@@ -11,7 +11,7 @@ on:
     tags:
       - "v*"
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
 
 permissions:
   contents: write
@@ -24,7 +24,7 @@ jobs:
   lint:
     name: Lint Python
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation'))
+    if: github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation')
 
     steps:
       - name: Checkout source
@@ -44,7 +44,7 @@ jobs:
   shellcheck:
     name: ShellCheck polaris-helper
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation'))
+    if: github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation')
 
     steps:
       - name: Checkout source
@@ -53,16 +53,16 @@ jobs:
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@2.0.0
         with:
-          additional_files: src/polaris-helper
+          additional_files: src/polaris-helper src/packaging/build-rpm.sh
 
   build:
-    name: Build (Fedora ${{ matrix.fedora }} KDE)
+    name: Build (Fedora ${{ matrix.fedora }})
     runs-on: ubuntu-latest
     needs: [lint, shellcheck]
-    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation'))
+    if: github.event.pull_request.draft != true && (github.event_name != 'pull_request' || !contains(github.event.pull_request.labels.*.name, 'documentation'))
     strategy:
       matrix:
-        fedora: [43]
+        fedora: [43, 44]
 
     container:
       image: fedora:${{ matrix.fedora }}
@@ -91,8 +91,7 @@ jobs:
 
           # 1) workflow_dispatch explicit input wins
           if [ -n "${INPUT_VERSION}" ]; then
-            VERSION="${INPUT_VERSION}"
-            VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~-]/./g')"
+            VERSION="${INPUT_VERSION#v}"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Resolved version from workflow input: ${VERSION}"
             exit 0
@@ -101,24 +100,23 @@ jobs:
           # 2) Tag pushes use tag name
           if [ "${GITHUB_REF#refs/tags/}" != "${GITHUB_REF}" ]; then
             VERSION="${GITHUB_REF#refs/tags/}"
-            VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~-]/./g')"
+            VERSION="${VERSION#v}"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Resolved version from tag: ${VERSION}"
             exit 0
           fi
 
-          # 3) PR builds create a clean beta version.
-          # RPM Version cannot include '-', so we use dots for prerelease label.
+          # 3) PR builds: semver prerelease string (dash separator so build-rpm.sh
+          #    splits it into RPM Version + Release: 0.prerelease.1)
           if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
             BASE_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
-            BASE_VERSION="${BASE_TAG}"
+            BASE_VERSION="${BASE_TAG#v}"
             if [ -z "${BASE_VERSION}" ]; then
-              BASE_VERSION="v0.0.0"
+              BASE_VERSION="0.0.0"
             fi
 
             SHORT_SHA="$(printf '%s' "$GITHUB_SHA" | cut -c1-8)"
-            VERSION="${BASE_VERSION}.beta.pr${{ github.event.pull_request.number }}.${SHORT_SHA}"
-            VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~]/./g')"
+            VERSION="${BASE_VERSION}-beta.pr${{ github.event.pull_request.number }}.${SHORT_SHA}"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "Resolved version for PR beta build: ${VERSION}"
             exit 0
@@ -126,7 +124,7 @@ jobs:
 
           # 4) Fallback for branch manual runs without input
           VERSION="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
-          VERSION="$(printf '%s' "$VERSION" | sed 's/[^[:alnum:]._+~-]/./g')"
+          VERSION="${VERSION#v}"
           if [ -z "${VERSION}" ]; then
             echo "Could not resolve a version (no tags found)."
             exit 1
@@ -143,30 +141,22 @@ jobs:
           GIT_DISCOVERY_ACROSS_FILESYSTEM: 1
         run: |
           mkdir -p "$TOPDIR" "$DISTDIR"
-          # Ensure rpmbuild writes inside the shared workspace (not ~)
           export HOME="${{ github.workspace }}"
           mkdir -p "$HOME"/rpmbuild
-          echo "GITHUB_REF=$GITHUB_REF"
-          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
-          echo "GITHUB_REF_TYPE=$GITHUB_REF_TYPE"
-          echo "VERSION (env)=$VERSION"
-
-          if [ -z "$VERSION" ]; then
-            echo "Resolved VERSION is empty; aborting."
-            exit 1
-          fi
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
           chmod +x src/packaging/build-rpm.sh
-          ./src/packaging/build-rpm.sh "$VERSION"
+          ./src/packaging/build-rpm.sh
 
-          # Collect RPMs into dist/
-          find "$HOME/rpmbuild/RPMS" -type f -name "*.rpm" -exec cp -v {} "$DISTDIR/" \;
+          find "$HOME/rpmbuild/RPMS"  -type f -name "*.rpm"     -exec cp -v {} "$DISTDIR/" \;
+          mkdir -p "$DISTDIR/srpms"
+          find "$HOME/rpmbuild/SRPMS" -type f -name "*.src.rpm" -exec cp -v {} "$DISTDIR/srpms/" \;
 
       - name: Smoke test — install RPM and verify files
         env:
           DISTDIR: ${{ github.workspace }}/dist
         run: |
-          dnf install -y --nogpgcheck "$DISTDIR"/*.rpm
+          dnf install -y --nogpgcheck "$DISTDIR"/*.noarch.rpm
           test -x /usr/bin/polaris              || { echo "FAIL: /usr/bin/polaris missing";         exit 1; }
           test -x /usr/libexec/polaris-helper   || { echo "FAIL: polaris-helper missing";           exit 1; }
           test -f /usr/share/applications/polaris.desktop || { echo "FAIL: .desktop file missing";  exit 1; }
@@ -176,8 +166,15 @@ jobs:
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: rpm-f${{ matrix.fedora }}-kde-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
-          path: dist/*.rpm
+          name: rpm-f${{ matrix.fedora }}-${{ github.event_name == 'pull_request' && format('pr{0}', github.event.pull_request.number) || 'release' }}
+          path: dist/*.noarch.rpm
+
+      - name: Upload SRPM artifact (f44 only, PRs only)
+        if: matrix.fedora == 44 && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: srpm-pr${{ github.event.pull_request.number }}
+          path: dist/srpms/*.src.rpm
 
   release:
     name: Release
@@ -211,11 +208,12 @@ jobs:
             echo "do_release=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download Fedora 43 KDE artifacts
+      - name: Download RPM artifacts
         if: steps.resolve_tag.outputs.do_release == 'true'
         uses: actions/download-artifact@v8
         with:
-          name: rpm-f43-kde-release
+          pattern: rpm-f*-release
+          merge-multiple: true
           path: dist
 
       - name: List files (debug)
@@ -253,29 +251,71 @@ jobs:
             > the package is not yet signed with a GPG key.
 
             ### Assets
-            - Fedora 43 KDE RPM
+            - Fedora 43 RPM
+            - Fedora 44 RPM
+
+  copr-beta:
+    name: Submit to COPR Testing
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'documentation')
+
+    steps:
+      - name: Download SRPM
+        uses: actions/download-artifact@v4
+        with:
+          name: srpm-pr${{ github.event.pull_request.number }}
+          path: dist
+
+      - name: Install copr-cli
+        run: pip install copr-cli
+
+      - name: Configure copr-cli
+        env:
+          COPR_LOGIN: ${{ secrets.COPR_LOGIN }}
+          COPR_TOKEN: ${{ secrets.COPR_TOKEN }}
+        run: |
+          mkdir -p ~/.config
+          cat > ~/.config/copr <<EOF
+          [copr-cli]
+          login          = ${COPR_LOGIN}
+          username       = tristantheroux
+          token          = ${COPR_TOKEN}
+          copr_url       = https://copr.fedorainfracloud.org
+          EOF
+
+      - name: Submit SRPM to Polaris-Testing COPR
+        run: |
+          copr-cli build --nowait \
+            tristantheroux/Polaris-Testing \
+            dist/*.src.rpm
 
   pr-beta-comment:
     name: Comment beta RPM location on PR
-    needs: build
+    needs: [build, copr-beta]
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'documentation')
+    if: always() && github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'documentation') && needs.build.result == 'success'
 
     steps:
-      - name: Post new comment with beta RPM download link
+      - name: Post beta install instructions
         uses: marocchino/sticky-pull-request-comment@v3
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           header: beta-rpm
           recreate: true
           message: |
-            ✅ Beta RPM built for commit `${{ github.sha }}`.
+            ✅ Beta RPMs are ready for commit `${{ github.sha }}`.
 
-            Download from this run's artifacts:
+            **Option 1 — COPR Testing (recommended, installs via DNF):**
+            ```bash
+            sudo dnf copr enable tristantheroux/Polaris-Testing
+            sudo dnf install polaris
+            # Remove testing repo after QA:
+            sudo dnf copr disable tristantheroux/Polaris-Testing
+            ```
+            > The COPR build runs asynchronously — wait ~5 min after this comment before installing.
+
+            **Option 2 — manual RPM download:**
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
 
-            Install with:
-            ```bash
-            sudo dnf install ./polaris-*.noarch.rpm
-            ```
-
-            Artifact name: `rpm-f43-kde-pr${{ github.event.pull_request.number }}`
+            Artifact names: `rpm-f43-pr${{ github.event.pull_request.number }}`, `rpm-f44-pr${{ github.event.pull_request.number }}`

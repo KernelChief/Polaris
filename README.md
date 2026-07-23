@@ -6,13 +6,13 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Made%20with-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Shell](https://img.shields.io/badge/Script-Shell-4EAA25?logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
-[![Fedora](https://img.shields.io/badge/Platform-Fedora%2043%20KDE-51A2DA?logo=fedora&logoColor=white)](https://fedoraproject.org/)
+[![Fedora](https://img.shields.io/badge/Platform-Fedora%2043%20%2F%2044-51A2DA?logo=fedora&logoColor=white)](https://fedoraproject.org/)
 [![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-orange?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/ttheroux)
 [![Stars](https://img.shields.io/github/stars/KernelChief/polaris?style=social)](https://github.com/KernelChief/polaris/stargazers)
 
 Setting up a Linux workstation shouldn’t be a chore.
 
-**Polaris** is a **PySide6 (Qt6)** desktop application that simplifies setting up a fresh Fedora KDE installation. It wraps essential post-install tasks, such as enabling repositories, installing drivers, and deploying apps, into a clean, point-and-click interface.
+**Polaris** is a **PySide6 (Qt6)** desktop application that simplifies setting up a fresh Fedora installation. It wraps essential post-install tasks, such as enabling repositories, installing drivers, and deploying apps, into a clean, point-and-click interface.
 
 **Why Polaris?** Polaris is the north star: always there, always reliable. It’s the first thing you find when you’re navigating a new install.
 
@@ -44,7 +44,7 @@ sudo dnf install ./polaris-*.noarch.rpm
 
 ## 🧩 Supported Platform
 
-Polaris is built specifically for **Fedora 43 KDE Workstation (Plasma 6)**. It leverages `dnf5`, Btrfs-specific tools, and KDE-native configurations to provide a seamless experience.
+Polaris is built and tested on **Fedora 43 and 44** with KDE Plasma and GNOME (GDM). It leverages `dnf5` and Btrfs-specific tools to provide a seamless post-install experience.
 
 ## 🧰 Included Features
 
@@ -62,12 +62,12 @@ The app auto-detects what is already on your system and organizes tools into ded
 * **AMD GPU Tools**: Monitoring (`radeontop`) and VA-API hardware acceleration.
 
 ### Security
-* **Password Managers**: 1Password (official repo), Proton Pass (RPM).
+* **Password Managers**: 1Password (official repo), Proton Pass (RPM), Bitwarden (Flatpak).
 * **VPN**: Tailscale mesh networking.
 
 ### Gaming
-* **Launchers**: Steam, Lutris, Heroic (AppImage), CurseForge (AppImage), Prism Launcher (Flatpak).
-* **Tools**: Wine, GameMode, Gamescope, MangoHud, GOverlay, ProtonUp-Qt.
+* **Launchers**: Steam, Lutris, Heroic (AppImage), CurseForge (AppImage), Faugus Launcher, Prism Launcher (Flatpak).
+* **Tools**: Wine, Bottles (Flatpak), GameMode, Gamescope, MangoHud, GOverlay, ProtonUp-Qt.
 * **Input**: Input Remapper for gamepads/mice.
 
 ### Containers
@@ -77,13 +77,14 @@ The app auto-detects what is already on your system and organizes tools into ded
 ### System Tools
 * **Hardware**: LACT (AMD Control), CoolerControl, OpenRGB, Piper (Mice).
 * **Filesystem**: Btrfs Assistant & Snapper for snapshot management.
-* **Utilities**: KDE Connect, Flatseal, Warehouse.
+* **Utilities**: Flatseal, Warehouse.
 
 ### Media & Apps
-* **Productivity**: VS Code, JetBrains Toolbox, LibreOffice.
-* **Communication**: Discord (RPM), Vesktop, Slack, Signal, Telegram, Element, Mattermost.
-* **Media**: OBS Studio, VLC, EasyEffects, Pulsemeeter, Flameshot.
-* **Graphics**: GIMP, Kdenlive.
+* **Productivity**: VS Code, JetBrains Toolbox, LibreOffice (Flatpak), Apache OpenOffice (Flatpak).
+* **Communication**: Thunderbird (Flatpak), Discord (RPM), Vesktop, Slack, Signal, Telegram, Element, Mattermost.
+* **Utilities**: Zoom, Google Chrome, LocalSend (Flatpak).
+* **Media**: OBS Studio, VLC, HandBrake (Flatpak), EasyEffects, Pulsemeeter, Flameshot.
+* **Graphics**: GIMP (Flatpak), Kdenlive (Flatpak).
 
 ## 🔐 Privilege & Security Model
 
